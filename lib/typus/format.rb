@@ -36,21 +36,31 @@ module Typus
         csv = CSV
       end
 
-      csv_string = csv.generate do |c|
-        c << fields.map { |f| _(f.humanize) }
-        data.each { |i| c << fields.map { |f| i.send(f) } }
+      filename = "#{Rails.root}/tmp/export-#{@resource[:self]}-#{Time.now.strftime("%Y%m%d%H%M%S")}.csv"
+
+      options = { :conditions => @conditions, :batch_size => 1000 }
+
+      csv.open(filename, 'w', :col_sep => ';') do |csv|
+        csv << fields
+        @resource[:class].find_in_batches(options) do |records|
+          records.each do |record|
+            csv << fields.map { |f| record.send(f) }
+          end
+        end
       end
 
-      filename = "#{Time.now.strftime("%Y%m%d%H%M%S")}_#{@resource[:self]}.csv"
-      send_data(csv_string,
-               :type => 'text/csv; charset=utf-8; header=present',
-               :filename => filename)
+      send_file filename
 
     end
 
     def generate_xml
       fields = @resource[:class].typus_fields_for(:xml).collect { |i| i.first }
       render :xml => data.to_xml(:only => fields)
+    end
+
+    def generate_json
+      fields = @resource[:class].typus_fields_for(:json).collect { |i| i.first }
+      render :json => data.to_json(:only => fields)
     end
 
     def data(*args)

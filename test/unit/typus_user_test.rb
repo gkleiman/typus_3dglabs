@@ -168,11 +168,12 @@ this_is_chelm@example.com
     assert TypusUser.generate(:email => 'demo@example.com', :password => 'XXXXXXXX', :role => 'admin').valid?
   end
 
-  def test_should_verify_can_perform?
-    assert TypusUser.instance_methods.map {|i| i.to_sym }.include?(:can_perform?)
+  def test_should_verify_can?
+    assert TypusUser.instance_methods.map {|i| i.to_sym }.include?(:can?)
     @current_user = TypusUser.find(:first)
-    assert @current_user.can_perform?(TypusUser, 'delete')
-    assert @current_user.can_perform?('TypusUser', 'delete')
+    assert @current_user.can?('delete', TypusUser)
+    assert @current_user.can?('delete', 'TypusUser')
+    assert !@current_user.cannot?('delete', 'TypusUser')
   end
 
 end

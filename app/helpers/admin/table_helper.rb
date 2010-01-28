@@ -36,7 +36,7 @@ module Admin::TableHelper
         action = if model.typus_user_id? && !@current_user.is_root?
                    # If there's a typus_user_id column on the table and logged user is not root ...
                    item.owned_by?(@current_user) ? item.class.typus_options_for(:default_action_on_item) : 'show'
-                 elsif !@current_user.can_perform?(model, 'edit')
+                 elsif @current_user.cannot?('edit', model)
                    'show'
                  else
                    item.class.typus_options_for(:default_action_on_item)
@@ -63,7 +63,7 @@ module Admin::TableHelper
           condition = if model.typus_user_id? && !@current_user.is_root?
                         item.owned_by?(@current_user)
                       else
-                        @current_user.can_perform?(model, 'destroy')
+                        @current_user.can?('destroy', model)
                       end
           perform = link_to trash, { :action => 'destroy', :id => item.id }, 
                                      :title => _("Remove"), 
@@ -130,7 +130,7 @@ module Admin::TableHelper
         headers << "<th>#{content}</th>"
 
       end
-      headers << "<th>&nbsp;</th>" if @current_user.can_perform?(model, 'delete')
+      headers << "<th>&nbsp;</th>" if @current_user.can?('delete', model)
       html << <<-HTML
 <tr>
 #{headers.join("\n")}
@@ -145,10 +145,10 @@ module Admin::TableHelper
 
     att_value = item.send(attribute)
     content = if !att_value.nil?
-      if @current_user.can_perform?(att_value.class.name, action)
-        link_to item.send(attribute).typus_name, :controller => "admin/#{attribute.pluralize}", :action => action, :id => att_value.id
+      if @current_user.can?(action, att_value.class.name)
+        link_to item.send(attribute).to_label, :controller => "admin/#{attribute.pluralize}", :action => action, :id => att_value.id
       else
-        att_value.typus_name
+        att_value.to_label
       end
     end
 
@@ -160,7 +160,7 @@ module Admin::TableHelper
 
   def typus_table_has_and_belongs_to_many_field(attribute, item)
     <<-HTML
-<td>#{item.send(attribute).map { |i| i.typus_name }.join('<br />')}</td>
+<td>#{item.send(attribute).map { |i| i.to_label }.join('<br />')}</td>
     HTML
   end
 
@@ -178,7 +178,7 @@ module Admin::TableHelper
 
   def typus_table_tree_field(attribute, item)
     <<-HTML
-<td>#{item.parent.typus_name if item.parent}</td>
+<td>#{item.parent.to_label if item.parent}</td>
     HTML
   end
 
@@ -225,11 +225,11 @@ module Admin::TableHelper
     options = { :controller => item.class.name.tableize, :action => 'toggle', :field => attribute.gsub(/\?$/,''), :id => item.id }
 
     content = if item.class.typus_options_for(:toggle) && !item.send(attribute).nil?
-                link_to link_text, params.merge(options), 
+                link_to _(link_text), params.merge(options), 
                                    :confirm => _("Change {{attribute}}?", 
                                    :attribute => item.class.human_attribute_name(attribute).downcase)
               else
-                link_text
+                _(link_text)
               end
 
     <<-HTML

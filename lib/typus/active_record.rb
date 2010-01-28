@@ -20,10 +20,10 @@ module Typus
     end
 
     ##
-    # This method is used to change a Rails behavior.
+    # This method is used to fix a Rails behavior.
     #
     #   typus $ script/console
-    #   Loading development environment (Rails 2.3.2)
+    #   Loading development environment (Rails 2.3.5)
     #   >> TypusUser.human_name
     #   => "Typususer"
     #   >> TypusUser.typus_human_name
@@ -57,14 +57,6 @@ module Typus
 
           attribute_type = model_fields[field]
 
-          # Custom field_type depending on the attribute name.
-          case field.to_s
-            when 'parent_id' then       attribute_type = :tree
-            when /file_name/ then       attribute_type = :file
-            when /password/ then        attribute_type = :password
-            when 'position' then        attribute_type = :position
-          end
-
           if reflect_on_association(field)
             attribute_type = reflect_on_association(field).macro
           end
@@ -73,8 +65,16 @@ module Typus
             attribute_type = :selector
           end
 
-          if typus_tiny_mce_fields.include?(field.to_s)
-            attribute_type = :tiny_mce
+          if typus_field_options_for(:rich_text).include?(field)
+            attribute_type = :rich_text
+          end
+
+          # Custom field_type depending on the attribute name.
+          case field.to_s
+            when 'parent', 'parent_id'  then attribute_type = :tree
+            when /file_name/            then attribute_type = :file
+            when /password/             then attribute_type = :password
+            when 'position'             then attribute_type = :position
           end
 
           if typus_field_options_for(:rich_text).include?(field)
@@ -94,20 +94,6 @@ module Typus
 
       return fields_with_type
 
-    end
-
-    # Return tiny_mce options of the model merged into the default options
-    def typus_tiny_mce_options
-      typus_options_for(:tiny_mce).merge(Typus::Configuration.config[name]['fields']['options']['tiny_mce']['options'].symbolize_keys.delete_if { |key,value| value == nil})
-    rescue
-      typus_options_for(:tiny_mce)
-    end
-
-    # Tiny_mce fields of the model
-    def typus_tiny_mce_fields
-      Typus::Configuration.config[name]['fields']['options']['tiny_mce']['fields'].split(', ')
-    rescue
-      []
     end
 
     # Typus sidebar filters.
@@ -242,8 +228,6 @@ module Typus
         # - Datetime: today, last_few_days, last_7_days, last_30_days
         # - Integer & String: *_id and "selectors" (p.ej. category_id)
         #
-        # today last_few_days last_7_days last_30_days
-        #
         case filter_type
         when :boolean
           condition = { key => (value == 'true') ? true : false }
@@ -322,10 +306,6 @@ module Typus
 
       return previous_, next_
 
-    end
-
-    def typus_name
-      respond_to?(:name) ? name : "#{self.class}##{id}"
     end
 
     def owned_by?(user)

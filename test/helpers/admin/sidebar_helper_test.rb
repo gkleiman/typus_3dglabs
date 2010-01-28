@@ -170,7 +170,7 @@ HTML
 
   end
 
-  # FIXME
+  # TODO
   def test_previous_and_next_with_params
     return
   end
@@ -209,21 +209,16 @@ HTML
   end
 
   # TODO: Test filters when @resource[:class].typus_filters returns filters.
-  # 
-  # Yes, I know, it's an ugly name for a test, but don't know how to 
-  # name this test. Suggestions are welcome. ;)
-  #
-  # FIXME
   def test_filters_with_filters
     return
   end
 
-  # FIXME
+  # TODO
   def test_relationship_filter
     return
   end
 
-  def test_datetime_filter
+  def test_date_filter
 
     @resource = { :class => TypusUser, :self => 'typus_users' }
     filter = 'created_at'
@@ -232,7 +227,7 @@ HTML
     self.expects(:params).at_least_once.returns(params)
 
     request = ''
-    output = datetime_filter(request, filter)
+    output = date_filter(request, filter)
     expected = <<-HTML
 <h2>Created at</h2>
 <ul>
@@ -245,7 +240,7 @@ HTML
     assert_equal expected, output
 
     request = 'created_at=today&page=1'
-    output = datetime_filter(request, filter)
+    output = date_filter(request, filter)
     expected = <<-HTML
 <h2>Created at</h2>
 <ul>

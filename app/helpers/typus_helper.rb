@@ -34,7 +34,7 @@ module TypusHelper
 <tr class="#{cycle('even', 'odd')}">
 <td>#{link_to klass_human_name, admin_items_path}<br /><small>#{_(klass.typus_description) if !klass.typus_description.nil?}</small></td>
 <td class="right"><small>
-#{link_to _("Add"), new_admin_item_path if @current_user.can_perform?(klass, 'create')}
+#{link_to _("Add"), new_admin_item_path if @current_user.can?('create', klass)}
 </small></td>
 </tr>
           HTML
@@ -91,6 +91,13 @@ module TypusHelper
 
   end
 
+  def form_partial
+    resource = @resource[:self]
+    template_file = "#{Rails.root}/app/views/admin/#{resource}/_form.html.erb"
+    partial = File.exists?(template_file) ? resource : 'resources'
+    return "admin/#{partial}/form"
+  end
+
   def typus_block(*args)
 
     options = args.extract_options!
@@ -144,13 +151,13 @@ module TypusHelper
 
   def login_info(user = @current_user)
 
-    admin_edit_typus_user_path = { :controller => "admin/#{Typus::Configuration.options[:user_class_name].tableize}", 
+    admin_edit_typus_user_path = { :controller => "/admin/#{Typus::Configuration.options[:user_class_name].tableize}", 
                                    :action => 'edit', 
                                    :id => user.id }
 
     message = _("Are you sure you want to sign out and end your session?")
 
-    user_details = if user.can_perform?(Typus::Configuration.options[:user_class_name], 'edit')
+    user_details = if user.can?('edit', Typus::Configuration.options[:user_class_name])
                      link_to user.name, admin_edit_typus_user_path, :title => "#{user.email} (#{user.role})"
                    else
                      user.name

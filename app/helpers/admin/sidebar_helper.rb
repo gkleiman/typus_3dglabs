@@ -29,7 +29,7 @@ module Admin::SidebarHelper
 
     case params[:action]
     when 'index', 'edit', 'show', 'update'
-      if @current_user.can_perform?(@resource[:class], 'create')
+      if @current_user.can?('create', @resource[:class])
         items << (link_to _("Add entry"), :action => 'new')
       end
     end
@@ -39,13 +39,13 @@ module Admin::SidebarHelper
       condition = if @resource[:class].typus_user_id? && !@current_user.is_root?
                     @item.owned_by?(@current_user)
                   else
-                    @current_user.can_perform?(@resource[:class], 'destroy')
+                    @current_user.can?('destroy', @resource[:class])
                   end
       items << (link_to _("Edit entry"), :action => 'edit', :id => @item.id) if condition
     end
 
     @resource[:class].typus_actions_for(params[:action]).each do |action|
-      if @current_user.can_perform?(@resource[:class], action)
+      if @current_user.can?(action, @resource[:class])
         items << (link_to _(action.humanize), params.merge(:action => action))
       end
     end
@@ -74,7 +74,7 @@ module Admin::SidebarHelper
       action = if klass.typus_user_id? && !@current_user.is_root?
                  @next.owned_by?(@current_user) ? 'edit' : 'show'
                else
-                 !@current_user.can_perform?(klass, 'edit') ? 'show' : params[:action]
+                 @current_user.cannot?('edit', klass) ? 'show' : params[:action]
                end
       items << (link_to _("Next"), params.merge(:action => action, :id => @next.id))
     end
@@ -82,7 +82,7 @@ module Admin::SidebarHelper
       action = if klass.typus_user_id? && !@current_user.is_root?
                  @previous.owned_by?(@current_user) ? 'edit' : 'show'
                else
-                 !@current_user.can_perform?(klass, 'edit') ? 'show' : params[:action]
+                 @current_user.cannot?('edit', klass) ? 'show' : params[:action]
                end
       items << (link_to _("Previous"), params.merge(:action => action, :id => @previous.id))
     end
@@ -103,14 +103,9 @@ module Admin::SidebarHelper
 
     hidden_params = search_params.map { |key, value| hidden_field_tag(key, value) }
 
-    <<-HTML
-<h2>#{_("Search")}</h2>
-<form action="/#{params[:controller]}" method="get">
-<p><input id="search" name="search" type="text" value="#{params[:search]}"/></p>
-#{hidden_params.sort.join("\n")}
-</form>
-<p class="tip">#{_("Search by")} #{search_by.downcase}.</p>
-    HTML
+    render :partial => 'admin/shared/search',
+           :locals => { :hidden_params => hidden_params,
+                        :search_by => search_by }
 
   end
 
@@ -129,8 +124,7 @@ module Admin::SidebarHelper
         when :datetime then     html << datetime_filter(current_request, key)
         when :date then         html << date_filter(current_request, key)
         when :belongs_to then   html << relationship_filter(current_request, key)
-        when :has_and_belongs_to_many then
-          html << relationship_filter(current_request, key, true)
+        when :has_and_belongs_to_many then html << relationship_filter(current_request, key, true)
         else
           html << "<p>#{_("Unknown")}</p>"
         end
@@ -158,7 +152,7 @@ module Admin::SidebarHelper
         related_items.each do |item|
           switch = 'selected' if request.include?("#{related_fk}=#{item.id}")
           items << <<-HTML
-<option #{switch} value="#{url_for params.merge(related_fk => item.id, :page => nil)}">#{item.typus_name}</option>
+<option #{switch} value="#{url_for params.merge(related_fk => item.id, :page => nil)}">#{item.to_label}</option>
           HTML
         end
         model_pluralized = model.name.downcase.pluralize
@@ -183,7 +177,7 @@ function surfto_#{model_pluralized}(form) {
       else
         related_items.each do |item|
           switch = request.include?("#{related_fk}=#{item.id}") ? 'on' : 'off'
-          items << (link_to item.typus_name, params.merge(related_fk => item.id, :page => nil), :class => switch)
+          items << (link_to item.to_label, params.merge(related_fk => item.id, :page => nil), :class => switch)
         end
       end
 
@@ -198,7 +192,7 @@ function surfto_#{model_pluralized}(form) {
 
   end
 
-  def datetime_filter(request, filter)
+  def date_filter(request, filter)
     items = []
     %w( today last_few_days last_7_days last_30_days ).each do |timeline|
       switch = request.include?("#{filter}=#{timeline}") ? 'on' : 'off'

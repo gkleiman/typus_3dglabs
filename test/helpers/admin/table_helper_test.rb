@@ -43,7 +43,7 @@ class Admin::TableHelperTest < ActiveSupport::TestCase
   def test_typus_table_header
 
     @current_user = mock()
-    @current_user.expects(:can_perform?).with(TypusUser, 'delete').returns(true)
+    @current_user.expects(:can?).with('delete', TypusUser).returns(true)
 
     fields = TypusUser.typus_fields_for(:list)
 
@@ -67,7 +67,7 @@ class Admin::TableHelperTest < ActiveSupport::TestCase
   def test_typus_table_header_with_params
 
     @current_user = mock()
-    @current_user.expects(:can_perform?).with(TypusUser, 'delete').returns(true)
+    @current_user.expects(:can?).with('delete', TypusUser).returns(true)
 
     fields = TypusUser.typus_fields_for(:list)
 
@@ -91,7 +91,7 @@ class Admin::TableHelperTest < ActiveSupport::TestCase
   def test_typus_table_header_when_user_cannot_delete_items
 
     @current_user = mock()
-    @current_user.expects(:can_perform?).with(TypusUser, 'delete').returns(false)
+    @current_user.expects(:can?).with('delete', TypusUser).returns(false)
 
     fields = TypusUser.typus_fields_for(:list)
 
@@ -114,7 +114,7 @@ class Admin::TableHelperTest < ActiveSupport::TestCase
   def test_typus_table_header_when_user_cannot_delete_items_with_params
 
     @current_user = mock()
-    @current_user.expects(:can_perform?).with(TypusUser, 'delete').returns(false)
+    @current_user.expects(:can?).with('delete', TypusUser).returns(false)
 
     fields = TypusUser.typus_fields_for(:list)
 
@@ -250,18 +250,18 @@ class Admin::TableHelperTest < ActiveSupport::TestCase
     options = { :toggle => false }
     Typus::Configuration.stubs(:options).returns(options)
 
-    post = posts(:published)
+    post = typus_users(:admin)
     output = typus_table_boolean_field('status', post)
     expected = <<-HTML
-<td align="center">True</td>
+<td align="center">Active</td>
     HTML
 
     assert_equal expected, output
 
-    post = posts(:unpublished)
+    post = typus_users(:disabled_user)
     output = typus_table_boolean_field('status', post)
     expected = <<-HTML
-<td align="center">False</td>
+<td align="center">Inactive</td>
     HTML
 
     assert_equal expected, output

@@ -75,7 +75,7 @@ module Typus
         Typus::Configuration.roles[role].compact
       end
 
-      def can_perform?(resource, action, options = {})
+      def can?(action, resource, options = {})
 
         # We are getting a Class, so we need to convert it to string.
         resource = resource.to_s
@@ -100,6 +100,10 @@ module Typus
 
         resources[resource].split(', ').include?(_action)
 
+      end
+
+      def cannot?(*args)
+        !can?(*args)
       end
 
       def is_root?

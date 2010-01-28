@@ -10,19 +10,19 @@ class Admin::PostsControllerTest < ActionController::TestCase
 <?xml version="1.0" encoding="UTF-8"?>
 <posts type="array">
   <post>
-    <status type="boolean">false</status>
+    <status>unpublished</status>
     <title>Owned by admin</title>
   </post>
   <post>
-    <status type="boolean">false</status>
+    <status>unpublished</status>
     <title>Owned by editor</title>
   </post>
   <post>
-    <status type="boolean">true</status>
+    <status>published</status>
     <title>Title One</title>
   </post>
   <post>
-    <status type="boolean">false</status>
+    <status>unpublished</status>
     <title>Title Two</title>
   </post>
 </posts>
@@ -38,15 +38,22 @@ class Admin::PostsControllerTest < ActionController::TestCase
     assert @typus_user.is_root?
 
     expected = <<-RAW
-Title,Status
-Owned by admin,false
-Owned by editor,false
-Title One,true
-Title Two,false
+title;status
+Title One;published
+Title Two;unpublished
+Owned by admin;unpublished
+Owned by editor;unpublished
      RAW
 
     get :index, :format => 'csv'
-    assert_equal expected, @response.body
+    assert_response :success
+
+    assert @response.body.is_a?(Proc)
+    require 'stringio'
+    output = StringIO.new
+    output.binmode
+    assert_nothing_raised { @response.body.call(@response, output) }
+    assert_equal(expected, output.string)
 
   end
 

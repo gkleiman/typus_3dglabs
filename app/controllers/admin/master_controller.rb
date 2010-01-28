@@ -40,9 +40,6 @@ class Admin::MasterController < ApplicationController
   before_filter :set_fields, 
                 :only => [ :index, :new, :edit, :create, :update, :show ]
 
-  before_filter :set_tiny_mce, 
-                :only => [ :new, :edit, :create, :update ]
-
   ##
   # This is the main index of the model. With filters, conditions 
   # and more.
@@ -89,7 +86,7 @@ class Admin::MasterController < ApplicationController
   #
   def create
 
-    @item = @resource[:class].new(params[:item])
+    @item = @resource[:class].new(params[@resource[:symbol]])
 
     if @resource[:class].typus_user_id?
       @item.attributes = { Typus.user_fk => @current_user.id }
@@ -143,7 +140,7 @@ class Admin::MasterController < ApplicationController
 
   def update
 
-    if @item.update_attributes(params[:item])
+    if @item.update_attributes(params[@resource[:symbol]])
 
       if @resource[:class].typus_user_id? && !@current_user.is_root?
         @item.update_attributes Typus.user_fk => @current_user.id
@@ -226,15 +223,16 @@ class Admin::MasterController < ApplicationController
   def unrelate
 
     resource_class = params[:resource].classify.constantize
+    resource_tableized = params[:resource].tableize
     resource = resource_class.find(params[:resource_id])
 
     if @resource[:class].
        reflect_on_association(resource_class.table_name.singularize.to_sym).
        try(:macro) == :has_one
-      attribute = resource_class.table_name.singularize
+      attribute = resource_tableized.singularize
       @item.update_attribute attribute, nil
     else
-      attribute = resource_class.table_name
+      attribute = resource_tableized
       @item.send(attribute).delete(resource)
     end
 
@@ -265,7 +263,8 @@ private
   def set_resource
     @resource = { :self => params[:controller].extract_resource, 
                   :human_name => params[:controller].extract_human_name, 
-                  :class => params[:controller].extract_class }
+                  :class => params[:controller].extract_class, 
+                  :symbol => params[:controller].extract_resource.singularize.to_sym }
   rescue Exception => error
     error_handler(error)
   end
@@ -348,13 +347,6 @@ private
     !condition ? { Typus.user_fk => @current_user.id } : { }
   end
 
-  def set_tiny_mce
-    if !@resource[:class].typus_tiny_mce_fields.empty? && defined?(TinyMCE)
-      options = @resource[:class].typus_tiny_mce_options
-      self.class.class_eval { uses_tiny_mce :options => options }
-    end
-  end
-
   def select_template(template, resource = @resource[:self])
     folder = (File.exist?("app/views/admin/#{resource}/#{template}.html.erb")) ? resource : 'resources'
     render "admin/#{folder}/#{template}"
@@ -388,7 +380,7 @@ private
       message = _("{{model}} successfully created.", :model => @resource[:human_name])
       path = "#{params[:back_to]}?#{params[:selected]}=#{@item.id}"
     when :polymorphic
-      resource.send(@item.class.name.tableize).create(params[:item])
+      resource.send(@item.class.name.tableize).create(params[@resource[:symbol]])
       path = "#{params[:back_to]}##{@resource[:self]}"
     end
 

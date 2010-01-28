@@ -52,7 +52,7 @@ class TypusController < ApplicationController
     redirect_to admin_sign_up_path and return if Typus.user_class.count.zero?
 
     if request.post?
-      if user = Typus.user_class.authenticate(params[:user][:email], params[:user][:password])
+      if user = Typus.user_class.authenticate(params[:typus_user][:email], params[:typus_user][:password])
         session[:typus_user_id] = user.id
         redirect_to params[:back_to] || admin_dashboard_path
       else
@@ -70,7 +70,7 @@ class TypusController < ApplicationController
 
   def recover_password
     if request.post?
-      if user = Typus.user_class.find_by_email(params[:user][:email])
+      if user = Typus.user_class.find_by_email(params[:typus_user][:email])
         ActionMailer::Base.default_url_options[:host] = request.host_with_port
         TypusMailer.deliver_reset_password_link(user)
         flash[:success] = _("Password recovery link sent to your email.")
@@ -82,15 +82,15 @@ class TypusController < ApplicationController
   end
 
   ##
-  # Available if Typus::Configuration.options[:recover_password] is enabled.
+  # Available if Typus::Configuration.options[:email] is set.
   #
   def reset_password
-    @user = Typus.user_class.find_by_token!(params[:token])
+    @typus_user = Typus.user_class.find_by_token!(params[:token])
     if request.post?
-      @user.password = params[:user][:password]
-      @user.password_confirmation = params[:user][:password_confirmation]
-      if @user.save
-        session[:typus_user_id] = @user.id
+      @typus_user.password = params[:typus_user][:password]
+      @typus_user.password_confirmation = params[:typus_user][:password_confirmation]
+      if !params[:typus_user][:password].blank? && @typus_user.save
+        session[:typus_user_id] = @typus_user.id
         redirect_to admin_dashboard_path
       else
         render :action => 'reset_password'
@@ -106,8 +106,8 @@ class TypusController < ApplicationController
 
       password = 'columbia'
 
-      user = Typus.user_class.generate(:email => params[:user][:email], 
-                                       :password => 'columbia', 
+      user = Typus.user_class.generate(:email => params[:typus_user][:email], 
+                                       :password => password, 
                                        :role => Typus::Configuration.options[:root])
       user.status = true
 
@@ -131,18 +131,20 @@ private
 
   def verify_typus_users_table_schema
 
-    unless Typus.user_class.model_fields.keys.include?(:role)
-      raise "Run `script/generate typus_update_schema_to_01 -f && rake db:migrate` to update database schema."
-    end
+    attributes = Typus.user_class.model_fields.keys
 
-    unless Typus.user_class.model_fields.keys.include?(:preferences)
-      raise "Run `script/generate typus_update_schema_to_02 -f && rake db:migrate` to update database schema."
+    generator = if !attributes.include?(:role) then 'typus_update_schema_to_01'
+                elsif !attributes.include?(:preferences) then 'typus_update_schema_to_02'
+                end
+
+    if generator
+      raise "Run `script/generate #{generator} -f && rake db:migrate` to update database schema."
     end
 
   end
 
   def recover_password_disabled?
-    redirect_to admin_sign_in_path unless Typus::Configuration.options[:recover_password]
+    redirect_to admin_sign_in_path unless Typus::Configuration.options[:email]
   end
 
   def select_layout

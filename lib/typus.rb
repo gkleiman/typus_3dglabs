@@ -91,20 +91,20 @@ module Typus
         Typus::Configuration.options[:config_folder] = 'vendor/plugins/typus/test/config/working'
       end
 
-      # Ruby Extensions
-      require 'typus/hash'
-      require 'typus/object'
-      require 'typus/string'
+      # Ruby/Rails Extensions
+      require 'extensions/hash'
+      require 'extensions/object'
+      require 'extensions/string'
+      require 'extensions/active_record'
 
       # Load configuration and roles.
       Typus::Configuration.config!
       Typus::Configuration.roles!
 
-      # Rails Extensions.
+      # Active Record Extensions.
       require 'typus/active_record'
-      require 'typus/extensions/routes'
 
-      # Mixins.
+      # Typus mixins.
       require 'typus/authentication'
       require 'typus/format'
       require 'typus/preview'
@@ -114,9 +114,7 @@ module Typus
       require 'typus/user'
 
       # Vendor.
-      require 'vendor/active_record'
       require 'vendor/paginator'
-      require 'vendor/rss_parser'
 
     end
 

@@ -7,12 +7,12 @@ class TypusHelperTest < ActiveSupport::TestCase
   include ActionView::Helpers::TextHelper
   include ActionController::UrlWriter
 
-  # FIXME
+  # TODO
   def test_applications
     return
   end
 
-  # FIXME
+  # TODO
   def test_resources
     return
   end
@@ -91,6 +91,12 @@ class TypusHelperTest < ActiveSupport::TestCase
     output = display_flash_message(message)
     assert output.nil?
 
+  end
+
+  def test_form_partial
+    @resource = { :self => 'categories' }
+    expected = 'admin/resources/form'
+    assert_equal expected, form_partial
   end
 
 end

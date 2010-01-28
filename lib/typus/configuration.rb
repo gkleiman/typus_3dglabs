@@ -6,10 +6,9 @@ module Typus
     typus_options = { :app_name => 'Typus', 
                       :config_folder => 'config/typus', 
                       :default_locale => :en, 
-                      :email => 'admin@example.com', 
+                      :email => nil, 
                       :file_preview => :typus_preview, 
                       :file_thumbnail => :typus_thumbnail, 
-                      :recover_password => false, 
                       :relationship => 'typus_users', 
                       :root => 'admin', 
                       :ssl => false, 
@@ -28,9 +27,6 @@ module Typus
                       :per_page => 15, 
                       :sidebar_selector => 5, 
                       :start_year => nil, 
-                      :tiny_mce => { :theme => 'advanced',
-                                     :theme_advanced_toolbar_location => 'top',
-                                     :theme_advanced_toolbar_align => 'left' }, 
                       :toggle => true }
 
     @@options = typus_options.merge(model_options)

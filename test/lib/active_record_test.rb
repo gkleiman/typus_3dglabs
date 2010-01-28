@@ -27,7 +27,7 @@ class ActiveRecordTest < ActiveSupport::TestCase
     expected_fields = [[:id, :integer],
                        [:title, :string],
                        [:body, :text],
-                       [:status, :boolean],
+                       [:status, :string],
                        [:favorite_comment_id, :integer],
                        [:created_at, :datetime],
                        [:updated_at, :datetime],
@@ -125,7 +125,7 @@ class ActiveRecordTest < ActiveSupport::TestCase
   end
 
   def test_should_return_post_typus_filters
-    expected = [['status', :boolean], 
+    expected = [['status', :string], 
                 ['created_at', :datetime], 
                 ['user', nil], 
                 ['user_id', nil]]
@@ -354,19 +354,6 @@ class ActiveRecordTest < ActiveSupport::TestCase
     expected = [ typus_users(:editor), typus_users(:removed_role) ]
     conditions = { 'status' => 'true' }
     assert_equal expected, typus_users(:designer).previous_and_next(conditions)
-  end
-
-  def test_should_verify_typus_name_is_working_properly
-
-    assert Category.new.respond_to?(:name)
-    assert_equal 'First Category', categories(:first).typus_name
-
-    assert !Page.new.respond_to?(:name)
-    assert_equal 'Page#1', pages(:published).typus_name
-
-    assert Comment.new.respond_to?(:name)
-    assert_equal "John", comments(:first).typus_name
-
   end
 
   def test_should_verify_typus_user_id
