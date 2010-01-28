@@ -30,7 +30,7 @@ module Admin::SidebarHelper
     case params[:action]
     when 'index', 'edit', 'show', 'update'
       if @current_user.can?('create', @resource[:class])
-        items << (link_to _("Add entry"), :action => 'new')
+        items << (link_to _("Add entry"), {:action => 'new'}, :class => 'new')
       end
     end
 
@@ -196,17 +196,27 @@ function surfto_#{model_pluralized}(form) {
     items = []
     %w( today last_few_days last_7_days last_30_days ).each do |timeline|
       switch = request.include?("#{filter}=#{timeline}") ? 'on' : 'off'
-      options = { filter.to_sym => timeline, :page => nil }
+      if switch == 'on'
+        options = { :page => nil }
+        params.delete(filter)
+      else
+        options = { filter.to_sym => timeline, :page => nil }
+      end
       items << (link_to _(timeline.humanize), params.merge(options), :class => switch)
     end
     build_typus_list(items, :attribute => filter)
   end
 
-  def date_filter(request, filter)
+  def datetime_filter(request, filter)
     items = []
     %w( today last_few_days last_7_days last_30_days ).each do |timeline|
       switch = request.include?("#{filter}=#{timeline}") ? 'on' : 'off'
-      options = { filter.to_sym => timeline, :page => nil }
+      if switch == 'on'
+        options = { :page => nil }
+        params.delete(filter)
+      else
+        options = { filter.to_sym => timeline, :page => nil }
+      end
       items << (link_to _(timeline.humanize), params.merge(options), :class => switch)
     end
     build_typus_list(items, :attribute => filter)
@@ -216,7 +226,12 @@ function surfto_#{model_pluralized}(form) {
     items = []
     @resource[:class].typus_boolean(filter).each do |key, value|
       switch = request.include?("#{filter}=#{key}") ? 'on' : 'off'
-      options = { filter.to_sym => key, :page => nil }
+      if switch == 'on'
+        options = { :page => nil }
+        params.delete(filter)
+      else
+        options = { filter.to_sym => key, :page => nil }
+      end
       items << (link_to _(value), params.merge(options), :class => switch)
     end
     build_typus_list(items, :attribute => filter)
@@ -228,7 +243,12 @@ function surfto_#{model_pluralized}(form) {
     values.each do |item|
       link_name, link_filter = (values.first.kind_of?(Array)) ? [ item.first, item.last ] : [ item, item ]
       switch = request.include?("#{filter}=#{link_filter}") ? 'on' : 'off'
-      options = { filter.to_sym => link_filter, :page => nil }
+      if switch == 'on'
+        options = { :page => nil }
+        params.delete(filter)
+      else
+        options = { filter.to_sym => link_filter, :page => nil }
+      end
       items << (link_to link_name.capitalize, params.merge(options), :class => switch)
     end
     build_typus_list(items, :attribute => filter)

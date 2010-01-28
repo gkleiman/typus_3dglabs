@@ -130,6 +130,7 @@ module Admin::TableHelper
         headers << "<th>#{content}</th>"
 
       end
+      headers << "<th>&nbsp;</th>" if @current_user.can?('edit', model)
       headers << "<th>&nbsp;</th>" if @current_user.can?('delete', model)
       html << <<-HTML
 <tr>
@@ -194,13 +195,13 @@ module Admin::TableHelper
                   :go => position.last }
 
       first_or_last = (item.respond_to?(:first?) && (position.last == 'move_higher' && item.first?)) || (item.respond_to?(:last?) && (position.last == 'move_lower' && item.last?))
-      html_position << link_to_unless(first_or_last, _(position.first), params.merge(options)) do |name|
-        %(<span class="inactive">#{name}</span>)
+      html_position << link_to_unless(first_or_last, _(position.first), params.merge(options), :class => "sprite #{position.first.downcase}") do |name|
+        %(<span class="inactive #{position.first.downcase} sprite">#{name}</span>)
       end
     end
 
     <<-HTML
-<td>#{html_position.join(' / ')}</td>
+<td>#{html_position.join('')}</td>
     HTML
 
   end
