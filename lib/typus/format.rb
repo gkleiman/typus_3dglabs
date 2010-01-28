@@ -51,6 +51,7 @@ module Typus
               else
                 iconv.iconv record.send(f).to_s
               end
+            end
           end
         end
       end
