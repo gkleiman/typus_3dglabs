@@ -21,7 +21,7 @@ module Typus
 
     def generate_csv
 
-      fields = @resource[:class].typus_fields_for(:csv).collect { |i| i.first }
+      fields = @resource[:class].typus_fields_for(:csv)
 
       require 'csv'
       if CSV.const_defined?(:Reader)
@@ -39,17 +39,23 @@ module Typus
       filename = "#{Rails.root}/tmp/export-#{@resource[:self]}-#{Time.now.strftime("%Y%m%d%H%M%S")}.csv"
 
       options = { :conditions => @conditions, :batch_size => 1000 }
+      iconv = Iconv.new('ISO-8859-15//TRANSLIT//IGNORE', 'UTF-8')
 
       csv.open(filename, 'w', :col_sep => ';') do |csv|
-        csv << fields
+        csv << fields.collect { |field| iconv.iconv @resource[:class].human_attribute_name(field.first).to_s }
         @resource[:class].find_in_batches(options) do |records|
           records.each do |record|
-            csv << fields.map { |f| record.send(f) }
+            csv << fields.map do |f, v|
+              if v == :boolean
+                iconv.iconv @resource[:class].typus_boolean(f)["#{record.send(f)}".to_sym]
+              else
+                iconv.iconv record.send(f).to_s
+              end
           end
         end
       end
 
-      send_file filename
+      send_file filename, :type => 'text/csv; charset=utf-8; header=present'
 
     end
 
