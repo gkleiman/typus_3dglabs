@@ -258,6 +258,10 @@ class Admin::MasterController < ApplicationController
 
   end
 
+  def current_user
+    @current_user
+  end
+
 private
 
   def set_resource
