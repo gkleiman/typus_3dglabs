@@ -61,7 +61,7 @@ module Admin::SidebarHelper
   def export
     formats = []
     @resource[:class].typus_export_formats.each do |f|
-      formats << (link_to f.upcase, params.merge(:format => f))
+      formats << (link_to _(f.upcase), params.merge(:format => f))
     end
     build_typus_list(formats, :header => 'export')
   end
