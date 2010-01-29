@@ -1,9 +1,9 @@
 <%
-  custom = { :width => '680', :height => '400', :toolbar => 'Basic', :disabled => attribute_disabled?(attribute) }
+  custom = { :width => 680, :height => 400, :toolbar => 'Basic' }
   options = options.merge!(custom)
 %>
-
+ 
 <li>
   <%= form.label attribute, label_text %>
-  <%= fckeditor_textarea(:item, attribute, options) %>
+  <%= form.cktext_area attribute, options %>
 </li>
