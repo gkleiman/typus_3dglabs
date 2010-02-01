@@ -128,7 +128,7 @@ module Admin::TableHelper
         headers << "<th>#{content}</th>"
 
       end
-      headers << "<th>&nbsp;</th>" if @current_user.can?('edit', model)
+      headers << "<th>&nbsp;</th>" if @current_user.can?('edit', model) || @current_user.can?('read', model)
       headers << "<th>&nbsp;</th>" if @current_user.can?('delete', model)
       html << <<-HTML
 <tr>
