@@ -75,25 +75,27 @@ module Typus
         Typus::Configuration.roles[role].compact
       end
 
+      # TODO: Rename action to mapping and refactor the _action case
+      #       statement.
       def can?(action, resource, options = {})
 
-        # We are getting a Class, so we need to convert it to string.
+        # Sometimes we are getting a Class, so we need to convert it 
+        # to string.
         resource = resource.to_s
 
         return false if !resources.include?(resource)
-        return true if resources[resource].include?('all')
+        return true if resources[resource].include?("all")
 
         _action = if options[:special]
                     action
                   else
                     case action
-                    when 'new', 'create'       then 'create'
-                    when 'index', 'show'       then 'read'
-                    when 'edit', 'update'      then 'update'
-                    when 'position', 'toggle'  then 'update'
-                    when 'relate', 'unrelate'  then 'update'
-                    when 'detach'              then 'update'
-                    when 'destroy'             then 'delete'
+                    when "new", "create" then "create"
+                    when "index", 'show" then "read"
+                    when "edit", "update", 
+                         "position', "toggle", 
+                         "relate", "unrelate", "detach" then "update"
+                    when "destroy" then "delete"
                     else action
                     end
                   end
@@ -117,9 +119,11 @@ module Typus
       end
 
       def language=(locale)
-        self.preferences = { :locale => locale }
+        options = { :locale => locale }
+        self.preferences.merge!(options)
       end
 
+      # OPTIMIZE: Cleanup ...
       def set_preferences
         if self.preferences.nil? || self.preferences[:locale].nil? || self.preferences[:locale].blank?
           self.preferences = { :locale => Typus::Configuration.options[:default_locale] }

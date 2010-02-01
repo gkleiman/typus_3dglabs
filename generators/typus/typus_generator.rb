@@ -1,46 +1,49 @@
+class String
+
+  def name; self; end
+
+end
+
 class TypusGenerator < Rails::Generator::Base
+
+  default_options :app_name => Rails.root.basename, 
+                  :user_class_name => "TypusUser"
 
   def manifest
 
     record do |m|
 
-      ##
       # Define variables.
-      #
-
-      application = Rails.root.basename
       timestamp = Time.now.utc.strftime("%Y%m%d%H%M%S")
 
-      ##
       # Create required folders.
-      #
-
-      [ 'app/controllers/admin', 
-        'app/views/admin', 
-        'config/typus', 
-        'public/images/admin/fancybox', 
-        'public/javascripts/admin', 
-        'public/stylesheets/admin', 
-        'test/functional/admin' ].each { |f| FileUtils.mkdir_p(f) unless File.directory?(f) }
+      %w( app/controllers/admin 
+          app/views/admin 
+          config/typus 
+          public/images/admin/fancybox 
+          public/javascripts/admin 
+          public/stylesheets/admin 
+          test/functional/admin ).each { |folder| m.directory folder }
 
       # To create <tt>application.yml</tt> and <tt>application_roles.yml</tt> 
       # detect available AR models on the application.
       models = (Typus.discover_models + Typus.models).uniq
       ar_models = []
 
+      # OPTIMIZE: I'm sure this can be cleaner.
+
       models.each do |model|
         begin
           klass = model.constantize
-          active_record_model = klass.superclass.equal?(ActiveRecord::Base) && !klass.abstract_class?
-          active_record_model_with_sti = klass.superclass.superclass.equal?(ActiveRecord::Base)
-          ar_models << klass if active_record_model || active_record_model_with_sti
+          active_record_model = klass < ActiveRecord::Base && !klass.abstract_class?
+          ar_models << klass if active_record_model
         rescue Exception => error
-          puts "=> [typus] #{error.message} on '#{model}'."
+          puts "=> [typus] #{error.message} on `#{model}`."
           exit
         end
       end
 
-      configuration = { :base => '', :roles => '' }
+      configuration = { :base => "", :roles => "" }
 
       ar_models.sort{ |x,y| x.class_name <=> y.class_name }.each do |model|
 
@@ -54,8 +57,8 @@ class TypusGenerator < Rails::Generator::Base
         # Remove foreign key and polymorphic type attributes
         reject_columns = []
         model.reflect_on_all_associations(:belongs_to).each do |i|
-          reject_columns << model.columns_hash[i.name.to_s + '_id']
-          reject_columns << model.columns_hash[i.name.to_s + '_type'] if i.options[:polymorphic]
+          reject_columns << model.columns_hash[i.name.to_s + "_id"]
+          reject_columns << model.columns_hash[i.name.to_s + "_type"] if i.options[:polymorphic]
         end
 
         model_columns = model.columns - reject_columns
@@ -70,7 +73,7 @@ class TypusGenerator < Rails::Generator::Base
         list_rejections = %w( id created_at created_on updated_at updated_on )
         form_rejections = %w( id created_at created_on updated_at updated_on position )
 
-        list = model_columns.reject { |c| c.sql_type == 'text' || list_rejections.include?(c.name) }.map(&:name)
+        list = model_columns.reject { |c| c.sql_type == "text" || list_rejections.include?(c.name) }.map(&:name)
         form = model_columns.reject { |c| form_rejections.include?(c.name) }.map(&:name)
 
         ##
@@ -81,9 +84,9 @@ class TypusGenerator < Rails::Generator::Base
         # - Search
         #
 
-        order_by = 'position' if list.include?('position')
-        filters = 'created_at' if model_columns.include?('created_at')
-        search = 'name' if list.include?('name')
+        order_by = "position" if list.include?("position")
+        filters = "created_at" if model_columns.include?("created_at")
+        search = "name" if list.include?("name")
 
         # We want attributes of belongs_to relationships to be shown in our 
         # field collections if those are not polymorphic.
@@ -95,13 +98,13 @@ class TypusGenerator < Rails::Generator::Base
         configuration[:base] << <<-RAW
 #{model}:
   fields:
-    list: #{list.join(', ')}
-    form: #{form.join(', ')}
+    list: #{list.join(", ")}
+    form: #{form.join(", ")}
   order_by: #{order_by}
-  relationships: #{relationships.join(', ')}
+  relationships: #{relationships.join(", ")}
   filters: #{filters}
   search: #{search}
-  application: #{application}
+  application: #{options[:app_name]}
 
         RAW
 
@@ -113,7 +116,7 @@ class TypusGenerator < Rails::Generator::Base
 
       if !configuration[:base].empty?
 
-        [ "application.yml", "application_roles.yml" ].each do |file|
+        %w( application.yml application_roles.yml ).each do |file|
           from = to = "config/typus/#{file}"
           if File.exists?(from) then to = "config/typus/#{timestamp}_#{file}" end
           m.template from, to, :assigns => { :configuration => configuration }
@@ -121,25 +124,19 @@ class TypusGenerator < Rails::Generator::Base
 
       end
 
-      [ "typus.yml", "typus_roles.yml", "README" ].each do |file|
+      %w( README typus.yml typus_roles.yml ).each do |file|
         from = to = "config/typus/#{file}"
         m.template from, to, :assigns => { :configuration => configuration }
       end
 
-      ##
       # Initializer
-      #
-
-      [ 'config/initializers/typus.rb' ].each do |file|
-        from = to = file
-        m.template from, to, :assigns => { :application => application }
-      end
+      m.template "initializer.rb", "config/initializers/typus.rb"
 
       ##
       # Assets
       #
 
-      [ 'public/images/admin/ui-icons.png' ].each { |f| m.file f, f }
+      %w( public/images/admin/ui-icons.png ).each { |f| m.file f, f }
 
       Dir["#{Typus.root}/generators/typus/templates/public/stylesheets/admin/*"].each do |file|
         from = to = "public/stylesheets/admin/#{File.basename(file)}"
@@ -162,22 +159,32 @@ class TypusGenerator < Rails::Generator::Base
       #   `test/functional/admin/#{resource}_controller_test.rb`
       #
 
-      ar_models << TypusUser
+      ar_models << options[:user_class_name]
       ar_models.each do |model|
 
-        folder = "admin/#{model.name.tableize}".split('/')[0...-1].join('/')
+        folder = "admin/#{model.name.tableize}".split("/")[0...-1].join("/")
+        views_folder = "app/views/admin/#{model.name.tableize}"
 
-        # Create needed folder.
         [ "app/controllers/#{folder}", 
-          "test/functional/#{folder}"].each { |f| FileUtils.mkdir_p(f) unless File.directory?(f) }
+          "test/functional/#{folder}", 
+          views_folder ].each { |f| m.directory f }
 
-        m.template "auto/resources_controller.rb.erb", 
+        assigns = { :inherits_from => "Admin::MasterController", 
+                    :resource => model.name.pluralize }
+
+        m.template "controller.rb", 
                    "app/controllers/admin/#{model.name.tableize}_controller.rb", 
-                   :assigns => { :model => model.name }
+                   :assigns => assigns
 
-        m.template "auto/resource_controller_test.rb.erb", 
+        m.template "functional_test.rb", 
                    "test/functional/admin/#{model.name.tableize}_controller_test.rb", 
-                   :assigns => { :model => model.name }
+                   :assigns => assigns
+
+        next if model.name == options[:user_class_name]
+
+        model.typus_actions.each do |action|
+          m.file "view.html.erb", "#{views_folder}/#{action}.html.erb"
+        end
 
       end
 
@@ -187,24 +194,56 @@ class TypusGenerator < Rails::Generator::Base
 
       Typus.resources.each do |resource|
 
-        m.template "auto/resource_controller.rb.erb", 
+        assigns = { :inherits_from => "TypusController", 
+                    :resource => resource }
+
+        m.template "controller.rb", 
                    "app/controllers/admin/#{resource.underscore}_controller.rb", 
-                   :assigns => { :resource => resource }
+                   :assigns => assigns
+
+        m.template "functional_test.rb", 
+                   "test/functional/admin/#{resource.underscore}_controller_test.rb", 
+                   :assigns => assigns
 
         views_folder = "app/views/admin/#{resource.underscore}"
-        FileUtils.mkdir_p(views_folder) unless File.directory?(views_folder)
-        m.file "auto/index.html.erb", "#{views_folder}/index.html.erb"
+        m.directory views_folder
+        m.file "view.html.erb", "#{views_folder}/index.html.erb"
 
+      end
+
+      # Generate the model file if it's custom.
+      unless options[:user_class_name] == 'TypusUser'
+        m.template "model.rb", "app/models/#{options[:user_class_name].underscore}.rb"
       end
 
       ##
       # Migration file
       #
 
-      m.migration_template 'db/create_typus_users.rb', 'db/migrate', 
-                            { :migration_file_name => 'create_typus_users' }
+      m.migration_template "migration.rb", 
+                           "db/migrate", 
+                            :assigns => { :migration_name => "Create#{options[:user_class_name]}s", 
+                                          :typus_users_table_name => options[:user_class_name].tableize }, 
+                            :migration_file_name => "create_#{options[:user_class_name].tableize}"
 
     end
+
+  end
+
+  def banner
+    "Usage: #{$0} #{spec.name}"
+  end
+
+  def add_options!(opt)
+
+    opt.separator ""
+    opt.separator "Options:"
+
+    opt.on("-u", "--typus_user=Class", String,
+           "Configure Typus User class name. Default is `#{options[:user_class_name]}`.") { |v| options[:user_class_name] = v }
+
+    opt.on("-a", "--app_name=ApplicationName", String,
+           "Set an application name. Default is `#{options[:app_name]}`.") { |v| options[:app_name] = v }
 
   end
 

@@ -11,10 +11,10 @@ extensible enough to match lots of use cases.
 
 - Access control by users and roles.
 - CRUD and custom actions for your models on a clean interface.
-- Internationalized.
+- I18n.
 - Extensible and overwritable templates.
 - Low memory footprint.
-- Released under the MIT License.
+- MIT License, the same as Rails.
 
 ## Links
 
@@ -34,8 +34,9 @@ extensible enough to match lots of use cases.
 
     $ cd example.com && script/server
 
-**Step 3:** Go to the admin area (<http://0.0.0.0:3000/admin>) and enjoy it!
+**Step 3:** Go to the admin area
 
+    $ open http://0.0.0.0:3000/admin
 
 ## Want to see a demo working?
 
@@ -43,17 +44,17 @@ Demo application is hosted at Heroku (<http://typus.heroku.com/>).
 
 Use the following credentials to log in.
 
-    Email: userdemo@intraducibles.com
-    Password: userdemo
+    Email: user@intraducibles.com
+    Password: columbia
 
 ## Installing
 
-Install from GitHub the latest version which it's compatible with Rails 2.3.4.
+Install from GitHub the latest version which it's compatible with Rails 2.3.5.
 
     $ script/plugin install git://github.com/fesplugas/typus.git
 
-Once `typus` is installed, run the generator to create required files and migrate your 
-database. (<tt>typus_users</tt> table is created)
+Once `typus` is installed, run the generator to create required files 
+and migrate your database.
 
     $ script/generate typus
     $ rake db:migrate
@@ -69,7 +70,7 @@ allow us to spend more time working and supporting the project.
 
 ## License
 
-Copyright &copy; 2007-2009 Francesc Esplugas Marti, released under the 
+Copyright &copy; 2007-2010 Francesc Esplugas Marti, released under the 
 MIT license
 
 [1]:http://intraducibles.com/projects/typus/donate

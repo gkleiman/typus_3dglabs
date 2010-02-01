@@ -16,36 +16,26 @@ module Admin::MasterHelper
 
     message = case
               when params[:resource] && editing
-                _("You're updating a {{resource_from}} for {{resource_to}}.", 
-                  :resource_from =>  options[:resource_from], 
-                  :resource_to => options[:resource_to])
+                "You're updating a {{resource_from}} for {{resource_to}}."
               when editing
-                _("You're updating a {{resource_from}}.", 
-                  :resource_from => options[:resource_from])
+                "You're updating a {{resource_from}}."
               when params[:resource]
-                _("You're adding a new {{resource_from}} to {{resource_to}}.", 
-                  :resource_from => options[:resource_from], 
-                  :resource_to => options[:resource_to])
+                "You're adding a new {{resource_from}} to {{resource_to}}."
               else
-                _("You're adding a new {{resource_from}}.", 
-                  :resource_from => options[:resource_from] )
+                "You're adding a new {{resource_from}}."
               end
 
-    returning(String.new) do |html|
-      html << <<-HTML
-<div id="flash" class="notice">
-  <p>#{message} #{link_to _("Do you want to cancel it?"), params[:back_to]}</p>
-</div>
-      HTML
-    end
+    message = _(message, 
+                :resource_from => options[:resource_from], 
+                :resource_to => options[:resource_to])
+
+    render "admin/helpers/display_link_to_previous", :message => message
 
   end
 
   def remove_filter_link(filter = request.env['QUERY_STRING'])
     return unless filter && !filter.blank?
-    <<-HTML
-<small>#{link_to _("Remove filter")}</small>
-    HTML
+    render "admin/helpers/remove_filter_link"
   end
 
   ##
@@ -67,7 +57,7 @@ module Admin::MasterHelper
 
   def pagination(*args)
     @options = args.extract_options!
-    render 'admin/shared/pagination' if @items.prev || @items.next
+    render "admin/helpers/pagination" if @items.prev || @items.next
   end
 
   ##

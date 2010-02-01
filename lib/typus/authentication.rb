@@ -15,7 +15,7 @@ module Typus
       if session[:typus_user_id]
         set_current_user
       else
-        back_to = (request.env['REQUEST_URI'] == '/admin') ? nil : request.env['REQUEST_URI']
+        back_to = (request.env['REQUEST_URI'] == admin_dashboard_path) ? nil : request.env['REQUEST_URI']
         redirect_to admin_sign_in_path(:back_to => back_to)
       end
 
@@ -32,7 +32,7 @@ module Typus
       end
 
       unless @current_user.status
-        back_to = (request.env['REQUEST_URI'] == '/admin') ? nil : request.env['REQUEST_URI']
+        back_to = (request.env['REQUEST_URI'] == admin_dashboard_path) ? nil : request.env['REQUEST_URI']
         raise _("Typus user has been disabled.")
       end
 
@@ -97,16 +97,16 @@ module Typus
 
       message = case params[:action]
                 when 'index', 'show'
-                  _("{{current_user_role}} can't display items.", 
-                    :current_user_role => @current_user.role.capitalize)
+                  "{{current_user_role}} can't display items."
                 when 'destroy'
-                  _("{{current_user_role}} can't delete this item.", 
-                    :current_user_role => @current_user.role.capitalize)
+                  "{{current_user_role}} can't delete this item."
                 else
-                  _("{{current_user_role}} can't perform action. ({{action}})", 
-                    :current_user_role => @current_user.role.capitalize, 
-                    :action => params[:action])
+                  "{{current_user_role}} can't perform action. ({{action}})"
                 end
+
+      message = _(message, 
+                  :current_user_role => @current_user.role.capitalize, 
+                  :action => params[:action])
 
       unless @current_user.can?(params[:action], @resource[:class])
         flash[:notice] = message

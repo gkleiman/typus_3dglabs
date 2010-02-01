@@ -2,7 +2,7 @@
 
 # System wide options
 
-Typus::Configuration.options[:app_name] = '<%= application %>'
+Typus::Configuration.options[:app_name] = '<%= options[:app_name] %>'
 # Typus::Configuration.options[:default_locale] = :en
 # Typus::Configuration.options[:email] = 'admin@example.com'
 # Typus::Configuration.options[:file_preview] = :typus_preview
@@ -10,7 +10,7 @@ Typus::Configuration.options[:app_name] = '<%= application %>'
 # Typus::Configuration.options[:relationship] = 'typus_users'
 # Typus::Configuration.options[:root] = 'admin'
 # Typus::Configuration.options[:ssl] = false
-# Typus::Configuration.options[:user_class_name] = 'TypusUser'
+Typus::Configuration.options[:user_class_name] = '<%= options[:user_class_name] %>'
 # Typus::Configuration.options[:user_fk] = 'typus_user_id'
 
 # Model options which can also be defined by model on the yaml files.
@@ -26,4 +26,3 @@ Typus::Configuration.options[:app_name] = '<%= application %>'
 # Typus::Configuration.options[:per_page] = 15
 # Typus::Configuration.options[:sidebar_selector] = 5
 # Typus::Configuration.options[:start_year] = Time.now.year - 10
-# Typus::Configuration.options[:toggle] = true

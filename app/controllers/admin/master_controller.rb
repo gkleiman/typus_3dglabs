@@ -172,14 +172,10 @@ class Admin::MasterController < ApplicationController
   end
 
   def toggle
-    if @resource[:class].typus_options_for(:toggle)
-      @item.toggle!(params[:field])
-      flash[:success] = _("{{model}} {{attribute}} changed.", 
-                          :model => @resource[:human_name], 
-                          :attribute => params[:field].humanize.downcase)
-    else
-      flash[:notice] = _("Toggle is disabled.")
-    end
+    @item.toggle!(params[:field])
+    flash[:success] = _("{{model}} {{attribute}} changed.", 
+                        :model => @resource[:human_name], 
+                        :attribute => params[:field].humanize.downcase)
     redirect_to request.referer || admin_dashboard_path
   end
 
@@ -327,14 +323,15 @@ private
   end
 
   def set_fields
-    @fields = case params[:action]
-              when 'index'
-                @resource[:class].typus_fields_for(:list)
-              when 'new', 'edit', 'create', 'update'
-                @resource[:class].typus_fields_for(:form)
-              else
-                @resource[:class].typus_fields_for(params[:action])
+
+    mapping = case params[:action]
+              when 'index' then :list
+              when 'new', 'edit', 'create', 'update' then :form
+              else params[:action]
               end
+
+    @fields = @resource[:class].typus_fields_for(mapping)
+
   end
 
   def set_order
@@ -348,7 +345,7 @@ private
     condition = @current_user.is_root? || 
                 !@resource[:class].typus_options_for(:only_user_items) || 
                 !@resource[:class].columns.map(&:name).include?(Typus.user_fk)
-    !condition ? { Typus.user_fk => @current_user.id } : { }
+    !condition ? { Typus.user_fk => @current_user.id } : {}
   end
 
   def select_template(template, resource = @resource[:self])

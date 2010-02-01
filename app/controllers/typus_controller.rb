@@ -71,8 +71,8 @@ class TypusController < ApplicationController
   def recover_password
     if request.post?
       if user = Typus.user_class.find_by_email(params[:typus_user][:email])
-        ActionMailer::Base.default_url_options[:host] = request.host_with_port
-        TypusMailer.deliver_reset_password_link(user)
+        url = admin_reset_password_url(:token => user.token)
+        TypusMailer.deliver_reset_password_link(user, url)
         flash[:success] = _("Password recovery link sent to your email.")
         redirect_to admin_sign_in_path
       else
@@ -129,6 +129,7 @@ class TypusController < ApplicationController
 
 private
 
+  # TODO: Try to move schema verification to Typus.boot!
   def verify_typus_users_table_schema
 
     attributes = Typus.user_class.model_fields.keys

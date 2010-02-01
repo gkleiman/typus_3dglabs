@@ -1,5 +1,6 @@
 module Admin::TableHelper
 
+  # OPTIMIZE: Move html code to partial & refactor.
   def build_typus_table(model, fields, items, link_options = {}, association = nil)
 
     returning(String.new) do |html|
@@ -73,8 +74,8 @@ module Admin::TableHelper
           perform = link_to unrelate, { :action => 'unrelate', :id => params[:id], :resource => model, :resource_id => item.id }, 
                                         :title => _("Unrelate"), 
                                         :confirm => _("Unrelate {{unrelate_model}} from {{unrelate_model_from}}?", 
-                                        :unrelate_model => model.typus_human_name, 
-                                        :unrelate_model_from => @resource[:human_name])
+                                                      :unrelate_model => model.typus_human_name, 
+                                                      :unrelate_model_from => @resource[:human_name])
         when 'show'
           # If we are showing content, we only can relate and unrelate if we are 
           # the owners of the owner record.
@@ -86,8 +87,8 @@ module Admin::TableHelper
           perform = link_to unrelate, { :action => 'unrelate', :id => params[:id], :resource => model, :resource_id => item.id }, 
                                         :title => _("Unrelate"), 
                                         :confirm => _("Unrelate {{unrelate_model}} from {{unrelate_model_from}}?", 
-                                        :unrelate_model => model.typus_human_name, 
-                                        :unrelate_model_from => @resource[:human_name]) if condition
+                                                      :unrelate_model => model.typus_human_name, 
+                                                      :unrelate_model_from => @resource[:human_name]) if condition
         end
 
         html << <<-HTML
@@ -103,21 +104,18 @@ module Admin::TableHelper
 
   end
 
-  ##
-  # Header of the table
-  #
+  # OPTIMIZE: Move html code to partial.
   def typus_table_header(model, fields)
     returning(String.new) do |html|
       headers = []
       fields.each do |key, value|
 
-        content = model.human_attribute_name(key)
-        content += " (#{key})" if key.include?('_id')
+        content = key.end_with?('_id') ? key : model.human_attribute_name(key)
 
         if (model.model_fields.map(&:first).collect { |i| i.to_s }.include?(key) || model.reflect_on_all_associations(:belongs_to).map(&:name).include?(key.to_sym)) && params[:action] == 'index'
           sort_order = case params[:sort_order]
-                       when 'asc'   then  ['desc', '&darr;']
-                       when 'desc'  then  ['asc', '&uarr;']
+                       when 'asc'   then ['desc', '&darr;']
+                       when 'desc'  then ['asc', '&uarr;']
                        else
                          [nil, nil]
                        end
@@ -140,6 +138,7 @@ module Admin::TableHelper
     end
   end
 
+  # OPTIMIZE: Refactor (Remove rescue)
   def typus_table_belongs_to_field(attribute, item)
 
     action = item.send(attribute).class.typus_options_for(:default_action_on_item) rescue 'edit'
@@ -153,36 +152,33 @@ module Admin::TableHelper
       end
     end
 
-    <<-HTML
-<td>#{content}</td>
-    HTML
+    return content_tag(:td, content)
 
   end
 
   def typus_table_has_and_belongs_to_many_field(attribute, item)
-    <<-HTML
-<td>#{item.send(attribute).map { |i| i.to_label }.join('<br />')}</td>
-    HTML
+    content = item.send(attribute).map { |i| i.to_label }.join('<br />')
+    return content_tag(:td, content)
   end
 
   def typus_table_string_field(attribute, item, link_options = {})
-    <<-HTML
-<td class="#{attribute}">#{h(item.send(attribute))}</td>
-    HTML
+    content = h(item.send(attribute))
+    return content_tag(:td, content, :class => attribute)
   end
 
   def typus_table_file_field(attribute, item, link_options = {})
-    <<-HTML
-<td>#{item.typus_preview_on_table(attribute)}</td>
-    HTML
+    content = item.typus_preview_on_table(attribute)
+    return content_tag(:td, content)
   end
 
+  # OPTIMIZE: Move html code to partial.
   def typus_table_tree_field(attribute, item)
     <<-HTML
 <td>#{item.parent.to_label if item.parent}</td>
     HTML
   end
 
+  # OPTIMIZE: Move html code to partial.
   def typus_table_position_field(attribute, item)
 
     html_position = []
@@ -200,9 +196,8 @@ module Admin::TableHelper
       end
     end
 
-    <<-HTML
-<td>#{html_position.join('')}</td>
-    HTML
+    content = html_position.join('')
+    return content_tag(:td, content)
 
   end
 
@@ -211,9 +206,7 @@ module Admin::TableHelper
     date_format = item.class.typus_date_format(attribute)
     content = !item.send(attribute).nil? ? item.send(attribute).to_s(date_format) : item.class.typus_options_for(:nil)
 
-    <<-HTML
-<td>#{content}</td>
-    HTML
+    return content_tag(:td, content)
 
   end
 
@@ -221,21 +214,19 @@ module Admin::TableHelper
 
     boolean_hash = item.class.typus_boolean(attribute)
     status = item.send(attribute)
-    link_text = !item.send(attribute).nil? ? boolean_hash["#{status}".to_sym] : item.class.typus_options_for(:nil)
+    link_text = boolean_hash["#{status}".to_sym]
 
-    options = { :controller => item.class.name.tableize, :action => 'toggle', :field => attribute.gsub(/\?$/,''), :id => item.id }
+    options = { :controller => "admin/#{item.class.name.tableize}", 
+                :action => 'toggle', 
+                :id => item.id, 
+                :field => attribute.gsub(/\?$/,'') }
 
-    content = if item.class.typus_options_for(:toggle) && !item.send(attribute).nil?
-                link_to _(link_text), params.merge(options), 
-                                   :confirm => _("Change {{attribute}}?", 
-                                   :attribute => item.class.human_attribute_name(attribute).downcase)
-              else
-                _(link_text)
-              end
+    confirm = _("Change {{attribute}}?", 
+                :attribute => item.class.human_attribute_name(attribute).downcase)
 
-    <<-HTML
-<td align="center">#{content}</td>
-    HTML
+    content = link_to _(link_text), options, :confirm => confirm
+
+    return content_tag(:td, content)
 
   end
 

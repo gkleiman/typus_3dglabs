@@ -7,7 +7,6 @@ module Admin::FormHelper
     returning(String.new) do |html|
 
       html << (error_messages_for :item, :header_tag => 'h3')
-      html << '<ol>'
 
       fields.each do |key, value|
 
@@ -27,12 +26,11 @@ module Admin::FormHelper
                 end
       end
 
-      html << '</ol>'
-
     end
 
   end
 
+  # OPTIMIZE: Remove returning(String.new) and return directly the html.
   def typus_belongs_to_field(attribute, options)
 
     form = options[:form]
@@ -43,7 +41,7 @@ module Admin::FormHelper
     #
     params[:action] = (params[:action] == 'create') ? 'new' : params[:action]
 
-    back_to = '/' + [ params[:controller], params[:action], params[:id] ].compact.join('/')
+    back_to = url_for(:controller => params[:controller], :action => params[:action], :id => params[:id])
 
     related = @resource[:class].reflect_on_association(attribute.to_sym).class_name.constantize
     related_fk = @resource[:class].reflect_on_association(attribute.to_sym).primary_key_name
@@ -71,7 +69,7 @@ module Admin::FormHelper
         label_text = @resource[:class].human_attribute_name(attribute)
         html << <<-HTML
 <li>
-  #{form.label label_text, "#{attribute.humanize} <small>#{message}</small>"}
+  #{form.label related_fk, "#{label_text} <small>#{message}</small>"}
   #{form.select related_fk, values, options, html_options }
 </li>
         HTML
@@ -81,7 +79,7 @@ module Admin::FormHelper
 
   end
 
-  # OPTIMIZE
+  # OPTIMIZE: Move html code to partial.
   def typus_tree_field(attribute, *args)
 
     options = args.extract_options!
@@ -103,9 +101,10 @@ module Admin::FormHelper
 
   end
 
+  # OPTIMIZE: Cleanup the case statement.
   def typus_relationships
 
-    @back_to = '/' + [ params[:controller], params[:action], params[:id] ].compact.join('/')
+    @back_to = url_for(:controller => params[:controller], :action => params[:action], :id => params[:id])
 
     returning(String.new) do |html|
       @resource[:class].typus_defaults_for(:relationships).each do |relationship|
@@ -128,6 +127,7 @@ module Admin::FormHelper
 
   end
 
+  # OPTIMIZE: Move html code to partial.
   def typus_form_has_many(field)
     returning(String.new) do |html|
 
@@ -217,6 +217,7 @@ module Admin::FormHelper
     end
   end
 
+  # OPTIMIZE: Move html code to partial.
   def typus_form_has_and_belongs_to_many(field)
     returning(String.new) do |html|
 
@@ -298,6 +299,7 @@ module Admin::FormHelper
     end
   end
 
+  # OPTIMIZE: Move html code to partial.
   def typus_form_has_one(field)
     returning(String.new) do |html|
 
@@ -337,6 +339,7 @@ module Admin::FormHelper
     end
   end
 
+  # OPTIMIZE: Cleanup the rescue ...
   def typus_template_field(attribute, template, options = {})
 
     template_name = File.join('admin', 'templates', "#{template}")
@@ -347,13 +350,12 @@ module Admin::FormHelper
                        :disabled => attribute_disabled?(attribute),
                        :include_blank => true }
 
-    render :partial => template_name,
-           :locals => { :resource => @resource,
-                        :attribute => attribute,
-                        :options => custom_options,
-                        :html_options => { },
-                        :form => options[:form],
-                        :label_text => @resource[:class].human_attribute_name(attribute) }
+    render template_name, :resource => @resource, 
+                          :attribute => attribute, 
+                          :options => custom_options, 
+                          :html_options => {}, 
+                          :form => options[:form], 
+                          :label_text => @resource[:class].human_attribute_name(attribute)
 
   rescue ActionView::TemplateError => error
     raise error

@@ -11,18 +11,12 @@ module Admin::SidebarHelper
              end
 
     return String.new if items.empty?
-    returning(String.new) do |html|
-      html << "<h2>#{header}</h2>\n" unless header.nil?
-      next unless options[:selector].nil?
-      html << "<ul>\n"
-      items.each do |item|
-        html << "<li>#{item}</li>\n"
-      end
-      html << "</ul>\n"
-    end
+
+    render "admin/helpers/list", :header => header, :items => items, :options => options
 
   end
 
+  # TODO: Test "Show entry" case.
   def actions
 
     items = []
@@ -35,16 +29,21 @@ module Admin::SidebarHelper
     end
 
     case params[:action]
+    when 'edit'
+      items << (link_to _("Show entry"), :action => 'show', :id => @item.id)
+    end
+
+    case params[:action]
     when 'show'
       condition = if @resource[:class].typus_user_id? && !@current_user.is_root?
                     @item.owned_by?(@current_user)
                   else
-                    @current_user.can?('destroy', @resource[:class])
+                    @current_user.can?('update', @resource[:class])
                   end
-      items << (link_to _("Edit entry"), :action => 'edit', :id => @item.id) if condition
+      items << (link_to_if condition, _("Edit entry"), :action => 'edit', :id => @item.id)
     end
 
-    @resource[:class].typus_actions_for(params[:action]).each do |action|
+    @resource[:class].typus_actions_on(params[:action]).each do |action|
       if @current_user.can?(action, @resource[:class])
         items << (link_to _(action.humanize), params.merge(:action => action))
       end
@@ -59,10 +58,9 @@ module Admin::SidebarHelper
   end
 
   def export
-    formats = []
-    @resource[:class].typus_export_formats.each do |f|
-      formats << (link_to _(f.upcase), params.merge(:format => f))
-    end
+    formats = @resource[:class].typus_export_formats.map do |format|
+                link_to _(format.upcase), params.merge(:format => format)
+              end
     build_typus_list(formats, :header => 'export')
   end
 
@@ -101,11 +99,9 @@ module Admin::SidebarHelper
     search_params = params.dup
     %w( action controller search page id ).each { |p| search_params.delete(p) }
 
-    hidden_params = search_params.map { |key, value| hidden_field_tag(key, value) }
+    hidden_params = search_params.map { |k, v| hidden_field_tag(k, v) }
 
-    render :partial => 'admin/shared/search',
-           :locals => { :hidden_params => hidden_params,
-                        :search_by => search_by }
+    render "admin/helpers/search", :hidden_params => hidden_params, :search_by => search_by
 
   end
 
@@ -125,14 +121,13 @@ module Admin::SidebarHelper
         when :date then         html << date_filter(current_request, key)
         when :belongs_to then   html << relationship_filter(current_request, key)
         when :has_and_belongs_to_many then html << relationship_filter(current_request, key, true)
-        else
-          html << "<p>#{_("Unknown")}</p>"
         end
       end
     end
 
   end
 
+  # OPTIMIZE: Move html code to partial.
   def relationship_filter(request, filter, habtm = false)
 
     att_assoc = @resource[:class].reflect_on_association(filter.to_sym)

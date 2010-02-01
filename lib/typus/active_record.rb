@@ -117,8 +117,19 @@ module Typus
 
     end
 
+    # OPTIMIZE
+    def typus_actions
+      actions = []
+      Typus::Configuration.config[name]['actions'].keys.map do |key|
+        actions += Typus::Configuration.config[name]['actions'][key].split(', ')
+      end
+      return actions
+    rescue
+      []
+    end
+
     # Extended actions for this model on Typus.
-    def typus_actions_for(filter)
+    def typus_actions_on(filter)
       Typus::Configuration.config[name]['actions'][filter.to_s].split(', ')
     rescue
       []
@@ -173,18 +184,17 @@ module Typus
     # We are able to define our own booleans.
     def typus_boolean(attribute = :default)
 
-      boolean = Typus::Configuration.config[name]['fields']['options']['booleans'][attribute.to_s] rescue nil
-      boolean = 'true, false' if boolean.nil?
+      begin
+        boolean = Typus::Configuration.config[name]['fields']['options']['booleans'][attribute.to_s]
+      rescue
+        boolean = 'true, false'
+      end
 
       hash = ActiveSupport::OrderedHash.new
 
-      if boolean.kind_of?(Array)
-        hash[:true] = boolean.first.humanize
-        hash[:false] = boolean.last.humanize
-      else
-        hash[:true] = boolean.split(', ').first.humanize
-        hash[:false] = boolean.split(', ').last.humanize
-      end
+      mapping = boolean.kind_of?(Array) ? boolean : boolean.split(', ')
+      hash[:true], hash[:false] = mapping.first, mapping.last
+      hash.map { |k, v| hash[k] = v.humanize }
 
       return hash
 
@@ -192,8 +202,9 @@ module Typus
 
     # We are able to define how to display dates on Typus
     def typus_date_format(attribute = :default)
-      date_format = Typus::Configuration.config[name]['fields']['options']['date_formats'][attribute.to_s].to_sym rescue nil
-      return !date_format.nil? ? date_format : :db
+      Typus::Configuration.config[name]['fields']['options']['date_formats'][attribute.to_s].to_sym
+    rescue
+      :db
     end
 
     # We are able to define which template to use to render the attribute 
@@ -277,6 +288,7 @@ module Typus
 
   module InstanceMethods
 
+    # TODO: Cleanup previous_ and next_ variables using options.merge().
     def previous_and_next(condition = {}, klass = self.class)
 
       previous_conditions = "#{klass.primary_key} < #{quote_value(id)}"
@@ -291,18 +303,18 @@ module Typus
       select = !klass.typus_user_id? ? klass.primary_key : "#{klass.primary_key}, #{Typus.user_fk}"
 
       previous_ = klass.send(:with_exclusive_scope) do
-        klass.find :first,
-             :select => select,
-             :order => "#{klass.primary_key} DESC",
-             :conditions => previous_conditions
-      end
+                    klass.find :first,
+                               :select => select,
+                               :order => "#{klass.primary_key} DESC",
+                               :conditions => previous_conditions
+                  end
 
       next_ = klass.send(:with_exclusive_scope) do
-        klass.find :first,
-             :select => select,
-             :order => "#{klass.primary_key} ASC",
-             :conditions => next_conditions
-      end
+                klass.find :first,
+                           :select => select,
+                           :order => "#{klass.primary_key} ASC",
+                           :conditions => next_conditions
+              end
 
       return previous_, next_
 
