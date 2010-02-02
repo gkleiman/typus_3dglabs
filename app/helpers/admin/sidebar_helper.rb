@@ -123,7 +123,7 @@ module Admin::SidebarHelper
         when :has_and_belongs_to_many then html << relationship_filter(current_request, key, true)
         end
       end
-    end
+    end.html_safe!
 
   end
 
