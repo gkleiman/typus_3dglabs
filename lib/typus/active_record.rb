@@ -77,10 +77,6 @@ module Typus
             when 'position'             then attribute_type = :position
           end
 
-          if typus_field_options_for(:rich_text).include?(field)
-            attribute_type = :rich_text
-          end
-
           # And finally insert the field and the attribute_type 
           # into the fields_with_type ordered hash.
           fields_with_type[field.to_s] = attribute_type
