@@ -24,7 +24,7 @@ module Admin::SidebarHelper
     case params[:action]
     when 'index', 'edit', 'show', 'update'
       if @current_user.can?('create', @resource[:class])
-        items << (link_to _("Add entry"), {:action => 'new'}, :class => 'new')
+        items << (link_to _("Add entry"), :action => 'new')
       end
     end
 
@@ -115,12 +115,13 @@ module Admin::SidebarHelper
     returning(String.new) do |html|
       typus_filters.each do |key, value|
         case value
-        when :boolean then      html << boolean_filter(current_request, key)
-        when :string then       html << string_filter(current_request, key)
-        when :datetime then     html << datetime_filter(current_request, key)
-        when :date then         html << date_filter(current_request, key)
-        when :belongs_to then   html << relationship_filter(current_request, key)
+        when :boolean then html << boolean_filter(current_request, key)
+        when :string then html << string_filter(current_request, key)
+        when :date, :datetime then html << date_filter(current_request, key)
+        when :belongs_to then html << relationship_filter(current_request, key)
         when :has_and_belongs_to_many then html << relationship_filter(current_request, key, true)
+        else
+          html << string_filter(current_request, key)
         end
       end
     end.html_safe!
@@ -188,64 +189,32 @@ function surfto_#{model_pluralized}(form) {
   end
 
   def date_filter(request, filter)
-    items = []
-    %w( today last_few_days last_7_days last_30_days ).each do |timeline|
-      switch = request.include?("#{filter}=#{timeline}") ? 'on' : 'off'
-      if switch == 'on'
-        options = { :page => nil }
-        params.delete(filter)
-      else
-        options = { filter.to_sym => timeline, :page => nil }
-      end
-      items << (link_to _(timeline.humanize), params.merge(options), :class => switch)
-    end
-    build_typus_list(items, :attribute => filter)
-  end
-
-  def datetime_filter(request, filter)
-    items = []
-    %w( today last_few_days last_7_days last_30_days ).each do |timeline|
-      switch = request.include?("#{filter}=#{timeline}") ? 'on' : 'off'
-      if switch == 'on'
-        options = { :page => nil }
-        params.delete(filter)
-      else
-        options = { filter.to_sym => timeline, :page => nil }
-      end
-      items << (link_to _(timeline.humanize), params.merge(options), :class => switch)
-    end
+    items = %w( today last_few_days last_7_days last_30_days ).map do |timeline|
+              switch = request.include?("#{filter}=#{timeline}") ? 'on' : 'off'
+              options = { filter.to_sym => timeline, :page => nil }
+              link_to _(timeline.humanize), params.merge(options), :class => switch
+            end
     build_typus_list(items, :attribute => filter)
   end
 
   def boolean_filter(request, filter)
-    items = []
-    @resource[:class].typus_boolean(filter).each do |key, value|
-      switch = request.include?("#{filter}=#{key}") ? 'on' : 'off'
-      if switch == 'on'
-        options = { :page => nil }
-        params.delete(filter)
-      else
-        options = { filter.to_sym => key, :page => nil }
-      end
-      items << (link_to _(value), params.merge(options), :class => switch)
-    end
+    items = @resource[:class].typus_boolean(filter).map do |key, value|
+              switch = request.include?("#{filter}=#{key}") ? 'on' : 'off'
+              options = { filter.to_sym => key, :page => nil }
+              link_to _(value), params.merge(options), :class => switch
+            end
     build_typus_list(items, :attribute => filter)
   end
 
   def string_filter(request, filter)
-    values = @resource[:class].send(filter)
-    items = []
-    values.each do |item|
-      link_name, link_filter = (values.first.kind_of?(Array)) ? [ item.first, item.last ] : [ item, item ]
-      switch = request.include?("#{filter}=#{link_filter}") ? 'on' : 'off'
-      if switch == 'on'
-        options = { :page => nil }
-        params.delete(filter)
-      else
-        options = { filter.to_sym => link_filter, :page => nil }
-      end
-      items << (link_to link_name.capitalize, params.merge(options), :class => switch)
-    end
+    values = @resource[:class]::const_get("#{filter.to_s.upcase}")
+    values = values.invert if values.kind_of?(Hash)
+    items = values.map do |item|
+              link_name, link_filter = (values.first.kind_of?(Array)) ? [ item.first, item.last ] : [ item, item ]
+              switch = request.include?("#{filter}=#{link_filter}") ? 'on' : 'off'
+              options = { filter.to_sym => link_filter, :page => nil }
+              link_to link_name.capitalize, params.merge(options), :class => switch
+            end
     build_typus_list(items, :attribute => filter)
   end
 

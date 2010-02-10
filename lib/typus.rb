@@ -13,13 +13,14 @@ module Typus
     end
 
     def locales
-      [ [ "Català", "ca" ],
-        [ "German", "de" ],
-        [ "English", "en" ],
-        [ "Español", "es" ],
-        [ "Français", "fr" ],
-        [ "Portuguese", "pt-BR" ],
-        [ "Russian", "ru" ] ]
+      { "ca" => "Català", 
+        "de" => "German", 
+        "en" => "English", 
+        "es" => "Español", 
+        "fr" => "Français", 
+        "hu" => "Magyar", 
+        "pt-BR" => "Portuguese", 
+        "ru" => "Russian" }
     end
 
     def applications

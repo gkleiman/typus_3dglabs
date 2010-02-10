@@ -13,6 +13,29 @@ class ActiveRecord::Base
   end
 
   ##
+  # On a model:
+  #
+  #     class Post < ActiveRecord::Base
+  #       STATUS = { :published => t("Published"), 
+  #                  :pending => t("Pending"), 
+  #                  :draft => t("Draft") }
+  #     end
+  #
+  #     >> Post.find(:first).status
+  #     => "published"
+  #     >> Post.find(:first).mapping(:status)
+  #     => "Published"
+  #     >> I18n.locale = "es"
+  #     => "es"
+  #     >> Post.find(:first).mapping(:status)
+  #     => "Publicado"
+  #
+  def mapping(attribute)
+    values = self.class::const_get("#{attribute.to_s.upcase}")
+    values.kind_of?(Hash) ? values[send(attribute)] : send(attribute)
+  end
+
+  ##
   # We had:
   #
   #   def typus_name

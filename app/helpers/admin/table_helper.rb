@@ -27,6 +27,7 @@ module Admin::TableHelper
           when :belongs_to then        html << typus_table_belongs_to_field(key, item)
           when :tree then              html << typus_table_tree_field(key, item)
           when :position then          html << typus_table_position_field(key, item)
+          when :selector then          html << typus_table_selector(key, item)
           when :has_and_belongs_to_many then
             html << typus_table_has_and_belongs_to_many_field(key, item)
           else
@@ -163,6 +164,11 @@ module Admin::TableHelper
 
   def typus_table_string_field(attribute, item, link_options = {})
     content = h(item.send(attribute))
+    return content_tag(:td, content, :class => attribute)
+  end
+
+  def typus_table_selector(attribute, item)
+    content = h(item.mapping(attribute))
     return content_tag(:td, content, :class => attribute)
   end
 
