@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Francesc Esplugas"]
-  s.date = %q{2010-02-10}
+  s.date = %q{2010-02-13}
   s.description = %q{Effortless backend interface for Ruby on Rails applications. (Admin scaffold generator.)}
   s.email = %q{francesc@intraducibles.com}
   s.extra_rdoc_files = [
@@ -42,6 +42,7 @@ Gem::Specification.new do |s|
      "app/views/admin/helpers/_list.html.erb",
      "app/views/admin/helpers/_login_info.html.erb",
      "app/views/admin/helpers/_pagination.html.erb",
+     "app/views/admin/helpers/_preview.html.erb",
      "app/views/admin/helpers/_quick_edit.html.erb",
      "app/views/admin/helpers/_remove_filter_link.html.erb",
      "app/views/admin/helpers/_resources.html.erb",
@@ -99,10 +100,11 @@ Gem::Specification.new do |s|
      "generators/typus/templates/initializer.rb",
      "generators/typus/templates/migration.rb",
      "generators/typus/templates/model.rb",
-     "generators/typus/templates/public/images/admin/fancybox/fancy_closebox.png",
-     "generators/typus/templates/public/images/admin/fancybox/fancy_left.png",
-     "generators/typus/templates/public/images/admin/fancybox/fancy_progress.png",
-     "generators/typus/templates/public/images/admin/fancybox/fancy_right.png",
+     "generators/typus/templates/public/images/admin/fancybox/blank.gif",
+     "generators/typus/templates/public/images/admin/fancybox/fancy_close.png",
+     "generators/typus/templates/public/images/admin/fancybox/fancy_loading.png",
+     "generators/typus/templates/public/images/admin/fancybox/fancy_nav_left.png",
+     "generators/typus/templates/public/images/admin/fancybox/fancy_nav_right.png",
      "generators/typus/templates/public/images/admin/fancybox/fancy_shadow_e.png",
      "generators/typus/templates/public/images/admin/fancybox/fancy_shadow_n.png",
      "generators/typus/templates/public/images/admin/fancybox/fancy_shadow_ne.png",
@@ -113,12 +115,13 @@ Gem::Specification.new do |s|
      "generators/typus/templates/public/images/admin/fancybox/fancy_shadow_w.png",
      "generators/typus/templates/public/images/admin/fancybox/fancy_title_left.png",
      "generators/typus/templates/public/images/admin/fancybox/fancy_title_main.png",
+     "generators/typus/templates/public/images/admin/fancybox/fancy_title_over.png",
      "generators/typus/templates/public/images/admin/fancybox/fancy_title_right.png",
      "generators/typus/templates/public/images/admin/ui-icons.png",
      "generators/typus/templates/public/javascripts/admin/application.js",
-     "generators/typus/templates/public/javascripts/admin/jquery-1.3.2.min.js",
-     "generators/typus/templates/public/javascripts/admin/jquery.fancybox-1.2.5.pack.js",
-     "generators/typus/templates/public/stylesheets/admin/jquery.fancybox-1.2.5.css",
+     "generators/typus/templates/public/javascripts/admin/jquery-1.4.1.min.js",
+     "generators/typus/templates/public/javascripts/admin/jquery.fancybox-1.3.0.pack.js",
+     "generators/typus/templates/public/stylesheets/admin/jquery.fancybox-1.3.0.css",
      "generators/typus/templates/public/stylesheets/admin/reset.css",
      "generators/typus/templates/public/stylesheets/admin/screen.css",
      "generators/typus/templates/view.html.erb",
@@ -138,7 +141,6 @@ Gem::Specification.new do |s|
      "lib/typus/configuration.rb",
      "lib/typus/format.rb",
      "lib/typus/preferences.rb",
-     "lib/typus/preview.rb",
      "lib/typus/quick_edit.rb",
      "lib/typus/reloader.rb",
      "lib/typus/user.rb",

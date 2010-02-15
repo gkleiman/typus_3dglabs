@@ -346,7 +346,7 @@ module Admin::FormHelper
   # OPTIMIZE: Cleanup the rescue ...
   def typus_template_field(attribute, template, options = {})
 
-    template_name = File.join('admin', 'templates', "#{template}")
+    template_name = "admin/templates/#{template}"
 
     custom_options = { :start_year => @resource[:class].typus_options_for(:start_year),
                        :end_year => @resource[:class].typus_options_for(:end_year),
@@ -364,11 +364,13 @@ module Admin::FormHelper
   rescue ActionView::TemplateError => error
     raise error
   rescue Exception => error
+    # This is the user locale, which is missing.
     locale = @current_user.preferences[:locale]
     message = <<-HTML
 Missing translation file <strong>#{locale}.yml</strong>. Download it <a href="http://github.com/svenfuchs/rails-i18n/blob/master/rails/locale/#{locale}.yml">here</a> and place it on `config/locales`.
     HTML
     flash[:error] = message
+    # We set a locale only for the current template.
     I18n.locale = :en
     retry
   end
@@ -376,6 +378,39 @@ Missing translation file <strong>#{locale}.yml</strong>. Download it <a href="ht
   def attribute_disabled?(attribute)
     accessible = @resource[:class].accessible_attributes
     return accessible.nil? ? false : !accessible.include?(attribute)
+  end
+
+  def typus_preview(item, attribute)
+
+    # typus_preview(attribute).html_safe! unless @item.send(attribute).blank?
+
+    attachment = attribute.split("_file_name").first
+    file_preview = Typus::Configuration.options[:file_preview]
+    file_thumbnail = Typus::Configuration.options[:file_thumbnail]
+
+    has_file_preview = item.send(attachment).styles.member?(file_preview)
+    has_file_thumbnail = item.send(attachment).styles.member?(file_thumbnail)
+    file_preview_is_image = item.send("#{attachment}_content_type") =~ /^image\/.+/
+
+    href = if has_file_preview
+             item.send(attachment).url(file_preview)
+           else
+             item.send(attachment).url
+           end
+
+    content = if has_file_thumbnail
+                image_tag item.send(attachment).url(file_thumbnail)
+              else
+                item.send(attribute)
+              end
+
+    render "admin/helpers/preview", 
+           :attribute => attribute, 
+           :content => content, 
+           :has_file_preview => has_file_preview, 
+           :href => href, 
+           :item => item
+
   end
 
   ##

@@ -23,10 +23,13 @@ class TypusController < ApplicationController
   before_filter :verify_typus_users_table_schema
 
   before_filter :reload_config_et_roles
+
   before_filter :require_login, 
                 :except => [ :sign_up, :sign_in, :sign_out, 
                              :recover_password, :reset_password, 
                              :quick_edit ]
+
+  before_filter :set_typus_preferences, :only => [ :dashboard ]
 
   before_filter :check_if_user_can_perform_action_on_resource_without_model, 
                 :except => [ :sign_up, :sign_in, :sign_out, 
@@ -38,13 +41,7 @@ class TypusController < ApplicationController
                 :only => [ :recover_password, :reset_password ]
 
   def dashboard
-    begin
-      I18n.locale = @current_user.preferences[:locale]
-      flash[:notice] = _("There are not defined applications in config/typus/*.yml.") if Typus.applications.empty?
-    rescue
-      @current_user.update_attributes :preferences => { :locale => Typus::Configuration.options[:default_locale] }
-      retry
-    end
+    flash[:notice] = _("There are not defined applications in config/typus/*.yml.") if Typus.applications.empty?
   end
 
   def sign_in
@@ -93,7 +90,7 @@ class TypusController < ApplicationController
         session[:typus_user_id] = @typus_user.id
         redirect_to admin_dashboard_path
       else
-        render :action => 'reset_password'
+        render :action => "reset_password"
       end
     end
   end
@@ -104,16 +101,15 @@ class TypusController < ApplicationController
 
     if request.post?
 
-      password = 'columbia'
-
       user = Typus.user_class.generate(:email => params[:typus_user][:email], 
-                                       :password => password, 
+                                       :password => Typus::Configuration.options[:default_password], 
                                        :role => Typus::Configuration.options[:root])
       user.status = true
 
       if user.save
         session[:typus_user_id] = user.id
-        flash[:notice] = _("Password set to \"{{password}}\".", :password => password)
+        flash[:notice] = _("Password set to \"{{password}}\".", 
+                           :password => Typus::Configuration.options[:default_password])
         redirect_to admin_dashboard_path
       else
         flash[:error] = _("That doesn't seem like a valid email address.")
@@ -129,17 +125,17 @@ class TypusController < ApplicationController
 
 private
 
-  # TODO: Try to move schema verification to Typus.boot!
   def verify_typus_users_table_schema
 
     attributes = Typus.user_class.model_fields.keys
 
-    generator = if !attributes.include?(:role) then 'typus_update_schema_to_01'
-                elsif !attributes.include?(:preferences) then 'typus_update_schema_to_02'
-                end
+    upgrades = ActiveSupport::OrderedHash.new
+    upgrades[:role] = "typus_update_schema_to_01"
+    upgrades[:preferences] = "typus_update_schema_to_02"
 
-    if generator
-      raise "Run `script/generate #{generator} -f && rake db:migrate` to update database schema."
+    upgrades.each do |key, value|
+      message = "Run `script/generate #{value} -f && rake db:migrate` to update database schema."
+      raise message if !attributes.include?(key)
     end
 
   end
@@ -149,7 +145,8 @@ private
   end
 
   def select_layout
-    %w( sign_up sign_in sign_out recover_password reset_password ).include?(action_name) ? 'typus' : 'admin'
+    %w( sign_up sign_in sign_out 
+        recover_password reset_password ).include?(action_name) ? "typus" : "admin"
   end
 
 end
