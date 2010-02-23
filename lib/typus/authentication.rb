@@ -27,7 +27,7 @@ module Typus
 
       @current_user = Typus.user_class.find(session[:typus_user_id])
 
-      unless Typus::Configuration.roles.keys.include?(@current_user.role)
+      unless Typus::Configuration.roles.has_key?(@current_user.role)
         raise _("Role does no longer exists.")
       end
 
@@ -60,7 +60,7 @@ module Typus
                 when 'update'
 
                   # current_user cannot change her role.
-                  if current_user && !(@item.role == params[@resource[:symbol]][:role])
+                  if current_user && !(@item.role == params[@object_name][:role])
                     _("You can't change your role.")
                   end
 

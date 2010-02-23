@@ -73,10 +73,10 @@ module TypusHelper
     links = [ (link_to_unless_current _("Dashboard"), admin_dashboard_path) ]
 
     Typus.models_on_header.each do |model|
-      links << (link_to_unless_current model.constantize.typus_human_name.pluralize, :controller => "admin/#{model.tableize}")
+      links << (link_to_unless_current model.constantize.typus_human_name.pluralize, :controller => "/admin/#{model.tableize}")
     end
 
-    if ActionController::Routing::Routes.named_routes.routes.keys.include?(:root)
+    if ActionController::Routing::Routes.named_routes.routes.has_key?(:root)
       links << (link_to _("View site"), root_path, :target => 'blank')
     end
 
@@ -86,7 +86,7 @@ module TypusHelper
 
   def login_info(user = @current_user)
 
-    admin_edit_typus_user_path = { :controller => "admin/#{Typus::Configuration.options[:user_class_name].tableize}", 
+    admin_edit_typus_user_path = { :controller => "/admin/#{Typus::Configuration.options[:user_class_name].tableize}", 
                                    :action => 'edit', 
                                    :id => user.id }
 
