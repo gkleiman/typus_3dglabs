@@ -240,14 +240,31 @@ module Typus
           condition = { key => (value == 'true') ? true : false }
           conditions = merge_conditions(conditions, condition)
         when :datetime
-          interval = case value
-                     when 'today'         then Time.new.midnight..Time.new.midnight.tomorrow
-                     when 'last_few_days' then 3.days.ago.midnight..Time.new.midnight.tomorrow
-                     when 'last_7_days'   then 6.days.ago.midnight..Time.new.midnight.tomorrow
-                     when 'last_30_days'  then Time.new.midnight.last_month..Time.new.midnight.tomorrow
-                     end
-          condition = ["#{key} BETWEEN ? AND ?", interval.first.to_s(:db), interval.last.to_s(:db)]
-          conditions = merge_conditions(conditions, condition)
+          if value.is_a?(Hash)
+            date_format = Date::DATE_FORMATS[typus_date_format(key)]
+
+            begin
+              unless value["from"].blank?
+                date_from = Date.strptime(value["from"], date_format).to_time
+                conditions = merge_conditions(conditions, ["#{key} >= ?", date_from])
+              end
+
+              unless value["to"].blank?
+                date_to = Date.strptime(value["to"], date_format).to_time.end_of_day
+                conditions = merge_conditions(conditions, ["#{key} <= ?", date_to])
+              end
+            rescue
+            end
+          else
+            interval = case value
+                       when 'today'         then Time.new.midnight..Time.new.midnight.tomorrow
+                       when 'last_few_days' then 3.days.ago.midnight..Time.new.midnight.tomorrow
+                       when 'last_7_days'   then 6.days.ago.midnight..Time.new.midnight.tomorrow
+                       when 'last_30_days'  then Time.new.midnight.last_month..Time.new.midnight.tomorrow
+                       end
+            condition = ["#{key} BETWEEN ? AND ?", interval.first.to_s(:db), interval.last.to_s(:db)]
+            conditions = merge_conditions(conditions, condition)
+          end
         when :date
           if value.is_a?(Hash)
             date_format = Date::DATE_FORMATS[typus_date_format(key)]
