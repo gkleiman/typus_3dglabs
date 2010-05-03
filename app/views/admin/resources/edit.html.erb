@@ -7,7 +7,7 @@
 
 <%= display_link_to_previous if params[:back_to] %>
 
-<h2><%= link_to @resource[:human_name].pluralize, :action => 'index' %> &rsaquo;
+<h2><%= link_to @resource[:pluralized], :action => 'index' %> &rsaquo;
     <%= _("Edit") %></h2>
 
 <%= typus_block :location => @resource[:self], :partial => 'edit' %>
@@ -21,6 +21,6 @@
   button = _("Save {{resource}}", :resource => @resource[:human_name])
 %>
 
-<%= render form_partial, :options => options, :button => button %>
+<%= render "form", :options => options, :button => button %>
 
 <%= typus_relationships %>

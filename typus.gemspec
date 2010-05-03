@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Francesc Esplugas"]
-  s.date = %q{2010-02-24}
+  s.date = %q{2010-03-08}
   s.description = %q{Effortless backend interface for Ruby on Rails applications. (Admin scaffold generator.)}
   s.email = %q{francesc@intraducibles.com}
   s.extra_rdoc_files = [
@@ -22,7 +22,6 @@ Gem::Specification.new do |s|
      "MIT-LICENSE",
      "README.md",
      "Rakefile",
-     "VERSION",
      "app/controllers/admin/master_controller.rb",
      "app/controllers/typus_controller.rb",
      "app/helpers/admin/form_helper.rb",
@@ -47,6 +46,7 @@ Gem::Specification.new do |s|
      "app/views/admin/helpers/_remove_filter_link.html.erb",
      "app/views/admin/helpers/_resources.html.erb",
      "app/views/admin/helpers/_search.html.erb",
+     "app/views/admin/helpers/_table_header.html.erb",
      "app/views/admin/resources/_form.html.erb",
      "app/views/admin/resources/edit.html.erb",
      "app/views/admin/resources/index.html.erb",
@@ -88,7 +88,16 @@ Gem::Specification.new do |s|
      "config/locales/ru.yml",
      "config/locales/ru_models.yml",
      "config/typus_routes.rb",
+     "doc/README.markdown",
+     "doc/configuration.markdown",
+     "doc/contribute.markdown",
+     "doc/donate.markdown",
+     "doc/install.markdown",
+     "doc/services.markdown",
+     "doc/tips.markdown",
      "generators/typus/USAGE",
+     "generators/typus/lib/insert_commands.rb",
+     "generators/typus/lib/string.rb",
      "generators/typus/templates/README",
      "generators/typus/templates/config/typus/README",
      "generators/typus/templates/config/typus/application.yml",
@@ -131,6 +140,7 @@ Gem::Specification.new do |s|
      "generators/typus_update_schema_to_01/typus_update_schema_to_01_generator.rb",
      "generators/typus_update_schema_to_02/templates/migration.rb",
      "generators/typus_update_schema_to_02/typus_update_schema_to_02_generator.rb",
+     "init.rb",
      "lib/extensions/active_record.rb",
      "lib/extensions/hash.rb",
      "lib/extensions/object.rb",
@@ -144,9 +154,11 @@ Gem::Specification.new do |s|
      "lib/typus/preferences.rb",
      "lib/typus/quick_edit.rb",
      "lib/typus/reloader.rb",
+     "lib/typus/routes.rb",
      "lib/typus/user.rb",
+     "lib/typus/version.rb",
+     "lib/vendor/inherit_views.rb",
      "lib/vendor/paginator.rb",
-     "rails/init.rb",
      "tasks/defaults.rake",
      "tasks/extras.rake",
      "test/config/broken/application.yml",
@@ -243,7 +255,7 @@ Gem::Specification.new do |s|
   s.homepage = %q{http://intraducibles.com/projects/typus}
   s.rdoc_options = ["--charset=UTF-8"]
   s.require_paths = ["lib"]
-  s.rubygems_version = %q{1.3.5}
+  s.rubygems_version = %q{1.3.6}
   s.summary = %q{Effortless backend interface for Ruby on Rails applications. (Admin scaffold generator.)}
   s.test_files = [
     "test/extensions/active_record_test.rb",

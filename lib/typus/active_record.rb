@@ -77,6 +77,17 @@ module Typus
             when 'position'             then attribute_type = :position
           end
 
+          # Set attribute type to file if accompanied by standard
+          # paperclip attachment fields with its name
+          paperclip_fields = ["#{field}_file_name".to_sym,
+                              "#{field}_content_type".to_sym,
+                              "#{field}_file_size".to_sym,
+                              "#{field}_updated_at".to_sym]
+
+          if (model_fields.keys & paperclip_fields).size == paperclip_fields.size
+            attribute_type = :file
+          end
+
           # And finally insert the field and the attribute_type 
           # into the fields_with_type ordered hash.
           fields_with_type[field.to_s] = attribute_type
@@ -164,7 +175,7 @@ module Typus
       fields = typus_defaults_for(:order_by)
 
       if fields.empty?
-        "#{table_name}.id ASC"
+        "#{table_name}.#{primary_key} ASC"
       else
         fields.map do |field|
           field.include?('-') ? "#{table_name}.#{field.delete('-')} DESC" : "#{table_name}.#{field} ASC"
@@ -225,8 +236,9 @@ module Typus
 
       # If a search is performed.
       if query_params[:search]
+        query = ActiveRecord::Base.connection.quote_string(query_params[:search].downcase)
         search = typus_defaults_for(:search).map do |s|
-                   ["LOWER(#{s}) LIKE '%#{ActiveRecord::Base.connection.quote_string(query_params[:search].downcase)}%'"]
+                   ["LOWER(#{s}) LIKE '%#{query}%'"]
                  end
         conditions = merge_conditions(conditions, search.join(' OR '))
       end

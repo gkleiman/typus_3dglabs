@@ -1,20 +1,18 @@
-class String
-
-  def name; self; end
-
-end
+require File.expand_path(File.dirname(__FILE__) + "/lib/insert_commands")
+require File.expand_path(File.dirname(__FILE__) + "/lib/string")
 
 class TypusGenerator < Rails::Generator::Base
 
   default_options :app_name => Rails.root.basename, 
-                  :user_class_name => "TypusUser"
+                  :user_class_name => "TypusUser",
+                  :user_fk => "typus_user_id"
 
   def manifest
 
     record do |m|
 
       # Define variables.
-      timestamp = Time.now.utc.strftime("%Y%m%d%H%M%S")
+      timestamp = Time.now.utc.to_s(:number)
 
       # Create required folders.
       %w( app/controllers/admin 
@@ -70,8 +68,12 @@ class TypusGenerator < Rails::Generator::Base
         # - Form
         #
 
-        list_rejections = %w( id created_at created_on updated_at updated_on )
-        form_rejections = %w( id created_at created_on updated_at updated_on position )
+        rejections = %w( id created_at created_on updated_at updated_on 
+                         salt crypted_password 
+                         password_salt persistence_token single_access_token perishable_token )
+
+        list_rejections = rejections + %w( password password_confirmation )
+        form_rejections = rejections + %w( position )
 
         list = model_columns.reject { |c| c.sql_type == "text" || list_rejections.include?(c.name) }.map(&:name)
         form = model_columns.reject { |c| form_rejections.include?(c.name) }.map(&:name)
@@ -86,7 +88,7 @@ class TypusGenerator < Rails::Generator::Base
 
         order_by = "position" if list.include?("position")
         filters = "created_at" if model_columns.include?("created_at")
-        search = "name" if list.include?("name")
+        search = ( [ "name", "title" ] & list ).join(", ")
 
         # We want attributes of belongs_to relationships to be shown in our 
         # field collections if those are not polymorphic.
@@ -130,6 +132,11 @@ class TypusGenerator < Rails::Generator::Base
       end
 
       # Initializer
+
+      if !options[:user_class_name].eql?("TypusUser")
+        options[:user_fk] = options[:user_class_name].foreign_key if options[:user_fk].eql?("typus_user_id")
+      end
+
       m.template "initializer.rb", "config/initializers/typus.rb"
 
       ##
@@ -213,8 +220,16 @@ class TypusGenerator < Rails::Generator::Base
 
       # Generate the model file if it's custom.
       unless options[:user_class_name] == 'TypusUser'
-        m.template "model.rb", "app/models/#{options[:user_class_name].underscore}.rb"
+        m.template "model.rb", 
+                   "app/models/#{options[:user_class_name].underscore}.rb", 
+                   :typus_users_table_name => options[:user_class_name].tableize
       end
+
+      ##
+      # Typus Route
+      #
+
+      m.insert_into "config/routes.rb", "Typus::Routes.draw(map)"
 
       ##
       # Migration file
@@ -240,10 +255,13 @@ class TypusGenerator < Rails::Generator::Base
     opt.separator "Options:"
 
     opt.on("-u", "--typus_user=Class", String,
-           "Configure Typus User class name. Default is `#{options[:user_class_name]}`.") { |v| options[:user_class_name] = v }
+           "Configure Typus User class name. Default is `#{default_options[:user_class_name]}`.") { |v| options[:user_class_name] = v }
 
     opt.on("-a", "--app_name=ApplicationName", String,
-           "Set an application name. Default is `#{options[:app_name]}`.") { |v| options[:app_name] = v }
+           "Set an application name. Default is `#{default_options[:app_name]}`.") { |v| options[:app_name] = v }
+
+    opt.on("-k", "--user_fk=UserFK", String,
+           "Configure Typus User foreign key field. Default is `#{default_options[:user_fk]}`.") { |v| options[:user_fk] = v }
 
   end
 

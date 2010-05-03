@@ -2,6 +2,8 @@ module Admin::SidebarHelper
 
   def build_typus_list(items, *args)
 
+    return String.new if items.empty?
+
     options = args.extract_options!
 
     header = if options[:header]
@@ -10,9 +12,10 @@ module Admin::SidebarHelper
                @resource[:class].human_attribute_name(options[:attribute])
              end
 
-    return String.new if items.empty?
-
-    render "admin/helpers/list", :header => header, :items => items, :options => options
+    render "admin/helpers/list", 
+           :header => header, 
+           :items => items, 
+           :options => options
 
   end
 
@@ -24,7 +27,7 @@ module Admin::SidebarHelper
     case params[:action]
     when 'index', 'edit', 'show', 'update'
       if @current_user.can?('create', @resource[:class])
-        items << (link_to _("Add entry"), {:action => 'new'}, :class => 'new')
+        items << (link_to _("Add entry"), { :action => 'new' }, :class => 'new')
       end
     end
 
@@ -35,7 +38,7 @@ module Admin::SidebarHelper
 
     case params[:action]
     when 'show'
-      condition = if @resource[:class].typus_user_id? && !@current_user.is_root?
+      condition = if @resource[:class].typus_user_id? && @current_user.is_not_root?
                     @item.owned_by?(@current_user)
                   else
                     @current_user.can?('update', @resource[:class])
@@ -62,6 +65,7 @@ module Admin::SidebarHelper
     formats = @resource[:class].typus_export_formats.map do |format|
                 link_to _(format.upcase), params.merge(:format => format)
               end
+
     build_typus_list(formats, :header => 'export')
 
   end
@@ -71,15 +75,16 @@ module Admin::SidebarHelper
     items = []
 
     if @next
-      action = if klass.typus_user_id? && !@current_user.is_root?
+      action = if klass.typus_user_id? && @current_user.is_not_root?
                  @next.owned_by?(@current_user) ? 'edit' : 'show'
                else
                  @current_user.cannot?('edit', klass) ? 'show' : params[:action]
                end
       items << (link_to _("Next"), params.merge(:action => action, :id => @next.id))
     end
+
     if @previous
-      action = if klass.typus_user_id? && !@current_user.is_root?
+      action = if klass.typus_user_id? && @current_user.is_not_root?
                  @previous.owned_by?(@current_user) ? 'edit' : 'show'
                else
                  @current_user.cannot?('edit', klass) ? 'show' : params[:action]
@@ -103,7 +108,9 @@ module Admin::SidebarHelper
 
     hidden_params = search_params.map { |k, v| hidden_field_tag(k, v) }
 
-    render "admin/helpers/search", :hidden_params => hidden_params, :search_by => search_by
+    render "admin/helpers/search", 
+           :hidden_params => hidden_params, 
+           :search_by => search_by
 
   end
 
@@ -121,7 +128,8 @@ module Admin::SidebarHelper
         when :string then html << string_filter(current_request, key)
         when :date, :datetime then html << date_filter(current_request, key)
         when :belongs_to then html << relationship_filter(current_request, key)
-        when :has_and_belongs_to_many then html << relationship_filter(current_request, key, true)
+        when :has_many || :has_and_belongs_to_many then
+          html << relationship_filter(current_request, key, true)
         when nil then
           # Do nothing. This is ugly but for now it's ok.
         else
@@ -152,7 +160,7 @@ module Admin::SidebarHelper
         related_items.each do |item|
           switch = 'selected' if request.include?("#{related_fk}=#{item.id}")
           items << <<-HTML
-<option #{switch} value="#{url_for params.merge(related_fk => item.id, :page => nil)}">#{item.to_label}</option>
+<option #{switch} value="#{url_for params.merge(related_fk => item.id, :page => nil)}">#{truncate(item.to_label, :length => 25)}</option>
           HTML
         end
         model_pluralized = model.name.downcase.pluralize
@@ -197,11 +205,11 @@ function surfto_#{model_pluralized}(form) {
     if !@resource[:class].typus_field_options_for(:filter_by_date_range).include?(filter.to_sym)
       items = %w( today last_few_days last_7_days last_30_days ).map do |timeline|
                 switch = request.include?("#{filter}=#{timeline}") ? 'on' : 'off'
+                options = { :page => nil }
                 if switch == 'on'
-                  options = { :page => nil }
                   params.delete(filter)
                 else
-                  options = { filter.to_sym => timeline, :page => nil }
+                  options.merge!(filter.to_sym => timeline)
                 end
                 link_to _(timeline.humanize), params.merge(options), :class => switch
               end
@@ -220,35 +228,41 @@ function surfto_#{model_pluralized}(form) {
 
   def boolean_filter(request, filter)
 
+    item_params = params.dup
+
     items = @resource[:class].typus_boolean(filter).map do |key, value|
               switch = request.include?("#{filter}=#{key}") ? 'on' : 'off'
+              options = { :page => nil }
               if switch == 'on'
-                options = { :page => nil }
-                params.delete(filter)
+                item_params.delete(filter)
               else
-                options = { filter.to_sym => key, :page => nil }
+                options.merge!(filter.to_sym => key)
               end
-              link_to _(value), params.merge(options), :class => switch
+              link_to _(value), item_params.merge(options), :class => switch
             end
+
     build_typus_list(items, :attribute => filter)
 
   end
 
   def string_filter(request, filter)
 
+    item_params = params.dup
+
     values = @resource[:class]::const_get("#{filter.to_s.upcase}")
     values = values.invert if values.kind_of?(Hash)
     items = values.map do |item|
               link_name, link_filter = (values.first.kind_of?(Array)) ? [ item.first, item.last ] : [ item, item ]
               switch = (params[filter.to_s] == link_filter) ? 'on' : 'off'
+              options = { :page => nil }
               if switch == 'on'
-                options = { :page => nil }
-                params.delete(filter)
+                item_params.delete(filter)
               else
-                options = { filter.to_sym => link_filter, :page => nil }
+                options.merge!(filter.to_sym => link_filter)
               end
-              link_to link_name.capitalize, params.merge(options), :class => switch
+              link_to link_name, item_params.merge(options), :class => switch
             end
+
     build_typus_list(items, :attribute => filter)
 
   end

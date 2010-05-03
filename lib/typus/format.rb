@@ -15,8 +15,6 @@ module Typus
 
       @items = @pager.page(params[:page])
 
-      select_template :index
-
     end
 
     # TODO: Find in batches only works properly if it's used on
@@ -39,7 +37,7 @@ module Typus
         csv = CSV
       end
 
-      filename = "#{Rails.root}/tmp/export-#{@resource[:self]}-#{Time.now.strftime("%Y%m%d%H%M%S")}.csv"
+      filename = "#{Rails.root}/tmp/export-#{@resource[:self]}-#{Time.now.utc.to_s(:number)}.csv"
 
       options = { :conditions => @conditions, :batch_size => 1000 }
       iconv = Iconv.new('ISO-8859-15//TRANSLIT//IGNORE', 'UTF-8')
@@ -65,12 +63,16 @@ module Typus
 
     def generate_xml
       fields = @resource[:class].typus_fields_for(:xml).collect { |i| i.first }
-      render :xml => data.to_xml(:only => fields)
+      methods = fields - @resource[:class].column_names
+      except = @resource[:class].column_names - fields
+      render :xml => data.to_xml(:methods => methods, :except => except)
     end
 
     def generate_json
       fields = @resource[:class].typus_fields_for(:json).collect { |i| i.first }
-      render :json => data.to_json(:only => fields)
+      methods = fields - @resource[:class].column_names
+      except = @resource[:class].column_names - fields
+      render :json => data.to_json(:methods => methods, :except => except)
     end
 
     def data(*args)

@@ -4,10 +4,6 @@ module Typus
 
   class << self
 
-    def version
-      @@version ||= File.read("#{root}/VERSION").strip
-    end
-
     def root
       File.dirname(__FILE__) + "/../"
     end
@@ -32,9 +28,7 @@ module Typus
       Typus::Configuration.config.collect { |i| i.first if i.last["application"] == name }.compact.uniq.sort
     end
 
-    ##
     # Gets a list of all the models on the configuration file.
-    #
     def models
       Typus::Configuration.config.map { |i| i.first }.sort
     end
@@ -43,18 +37,14 @@ module Typus
       models.collect { |m| m if m.constantize.typus_options_for(:on_header) }.compact
     end
 
-    ##
     # List of resources, which are tableless models.
-    #
     def resources
       Typus::Configuration.roles.keys.map do |key|
         Typus::Configuration.roles[key].keys
       end.flatten.sort.uniq.delete_if { |x| models.include?(x) }
     end
 
-    ##
     # Gets a list of models under app/models
-    #
     def discover_models
       all_models = []
       Dir.chdir(File.join(Rails.root, "app/models")) do
@@ -98,7 +88,6 @@ module Typus
       require "extensions/object"
       require "extensions/string"
       require "extensions/active_record"
-      require "extensions/routes"
 
       # Load configuration and roles.
       Typus::Configuration.config!
@@ -117,6 +106,7 @@ module Typus
 
       # Vendor.
       require "vendor/paginator"
+      require "vendor/inherit_views"
 
     end
 
