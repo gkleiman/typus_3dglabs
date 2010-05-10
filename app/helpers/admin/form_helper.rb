@@ -382,7 +382,7 @@ Missing translation file <strong>#{locale}.yml</strong>. Download it <a href="ht
 
   def typus_preview(item, attribute)
 
-    # typus_preview(attribute).html_safe! unless @item.send(attribute).blank?
+    return nil unless @item.send(attribute).exists?
 
     attachment = attribute.split("_file_name").first
     file_preview = Typus::Configuration.options[:file_preview]
@@ -406,7 +406,7 @@ Missing translation file <strong>#{locale}.yml</strong>. Download it <a href="ht
     content = if has_file_thumbnail
                 image_tag item.send(attachment).url(file_thumbnail)
               else
-                item.send(attribute)
+                _("View {{attribute}}", :attribute => @item.class.human_attribute_name(attribute).downcase)
               end
 
     render "admin/helpers/preview", 
