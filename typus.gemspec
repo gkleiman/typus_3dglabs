@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{typus}
-  s.version = "0.9.39"
+  s.version = "0.9.40"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Francesc Esplugas"]
-  s.date = %q{2010-03-08}
+  s.date = %q{2010-05-12}
   s.description = %q{Effortless backend interface for Ruby on Rails applications. (Admin scaffold generator.)}
   s.email = %q{francesc@intraducibles.com}
   s.extra_rdoc_files = [
@@ -87,7 +87,6 @@ Gem::Specification.new do |s|
      "config/locales/pt-BR_models.yml",
      "config/locales/ru.yml",
      "config/locales/ru_models.yml",
-     "config/typus_routes.rb",
      "doc/README.markdown",
      "doc/configuration.markdown",
      "doc/contribute.markdown",
@@ -144,7 +143,6 @@ Gem::Specification.new do |s|
      "lib/extensions/active_record.rb",
      "lib/extensions/hash.rb",
      "lib/extensions/object.rb",
-     "lib/extensions/routes.rb",
      "lib/extensions/string.rb",
      "lib/typus.rb",
      "lib/typus/active_record.rb",
@@ -189,6 +187,7 @@ Gem::Specification.new do |s|
      "test/fixtures/app/controllers/admin/categories_controller.rb",
      "test/fixtures/app/controllers/admin/comments_controller.rb",
      "test/fixtures/app/controllers/admin/pages_controller.rb",
+     "test/fixtures/app/controllers/admin/pictures_controller.rb",
      "test/fixtures/app/controllers/admin/posts_controller.rb",
      "test/fixtures/app/controllers/admin/status_controller.rb",
      "test/fixtures/app/controllers/admin/typus_users_controller.rb",
@@ -199,11 +198,17 @@ Gem::Specification.new do |s|
      "test/fixtures/app/models/custom_user.rb",
      "test/fixtures/app/models/delayed/task.rb",
      "test/fixtures/app/models/page.rb",
+     "test/fixtures/app/models/picture.rb",
      "test/fixtures/app/models/post.rb",
      "test/fixtures/app/models/view.rb",
      "test/fixtures/app/views/admin/categories/_form.html.erb",
      "test/fixtures/app/views/admin/dashboard/_content.html.erb",
      "test/fixtures/app/views/admin/dashboard/_sidebar.html.erb",
+     "test/fixtures/app/views/admin/pictures/_edit.html.erb",
+     "test/fixtures/app/views/admin/pictures/_index.html.erb",
+     "test/fixtures/app/views/admin/pictures/_new.html.erb",
+     "test/fixtures/app/views/admin/pictures/_show.html.erb",
+     "test/fixtures/app/views/admin/pictures/_sidebar.html.erb",
      "test/fixtures/app/views/admin/posts/_edit.html.erb",
      "test/fixtures/app/views/admin/posts/_index.html.erb",
      "test/fixtures/app/views/admin/posts/_new.html.erb",
@@ -217,6 +222,7 @@ Gem::Specification.new do |s|
      "test/fixtures/categories.yml",
      "test/fixtures/comments.yml",
      "test/fixtures/pages.yml",
+     "test/fixtures/pictures.yml",
      "test/fixtures/posts.yml",
      "test/fixtures/typus_users.yml",
      "test/functional/admin/master_controller_assets_relationships.rb",
@@ -255,7 +261,7 @@ Gem::Specification.new do |s|
   s.homepage = %q{http://intraducibles.com/projects/typus}
   s.rdoc_options = ["--charset=UTF-8"]
   s.require_paths = ["lib"]
-  s.rubygems_version = %q{1.3.6}
+  s.rubygems_version = %q{1.3.5}
   s.summary = %q{Effortless backend interface for Ruby on Rails applications. (Admin scaffold generator.)}
   s.test_files = [
     "test/extensions/active_record_test.rb",
@@ -265,6 +271,7 @@ Gem::Specification.new do |s|
      "test/fixtures/app/controllers/admin/categories_controller.rb",
      "test/fixtures/app/controllers/admin/comments_controller.rb",
      "test/fixtures/app/controllers/admin/pages_controller.rb",
+     "test/fixtures/app/controllers/admin/pictures_controller.rb",
      "test/fixtures/app/controllers/admin/posts_controller.rb",
      "test/fixtures/app/controllers/admin/status_controller.rb",
      "test/fixtures/app/controllers/admin/typus_users_controller.rb",
@@ -275,6 +282,7 @@ Gem::Specification.new do |s|
      "test/fixtures/app/models/custom_user.rb",
      "test/fixtures/app/models/delayed/task.rb",
      "test/fixtures/app/models/page.rb",
+     "test/fixtures/app/models/picture.rb",
      "test/fixtures/app/models/post.rb",
      "test/fixtures/app/models/view.rb",
      "test/functional/admin/master_controller_assets_relationships.rb",
